@@ -158,7 +158,6 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         #
         #    Rendering
         #
-        layout.enabled = not animAutoRender_props.rendering
     
         row = layout.row()
         row.operator("render.animation_automaton_render", icon="CLIP", text="Render animation")
@@ -185,14 +184,18 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
             enableRendering = False
             col.label("Empty list of directions", icon='ERROR')
         
-        row.enabled = enableRendering
+        row.enabled = enableRendering and not animAutoRender_props.rendering
         
         if animAutoRender_props.rendering:
-            layout.label(text="RENDERING ANIMATION: " + "%d" % animAutoRender_props.frames_done + "/" + "%d" % animAutoRender_props.total_frames)
-            layout.prop(animAutoRender_props, 'percentage')
+            col = layout.column()
+            col.label(text="RENDERING ANIMATION: " + "%d" % animAutoRender_props.frames_done + "/" + "%d" % animAutoRender_props.total_frames)
+            col.prop(animAutoRender_props, 'percentage')
+            col.enabled = True
         
         layout.separator()
         
+        layout = layout.column()
+        layout.enabled = not animAutoRender_props.rendering
         
         #
         #    Options
