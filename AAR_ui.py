@@ -26,7 +26,6 @@ Created by Maciej Paluszek
 
 import bpy, bl_operators
 import math
-from datetime import timedelta
 
 # 
 #    List elements
@@ -35,8 +34,14 @@ class AnimAutoRender_UL_animation(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         # draw_item must handle the three layout types... Usually 'DEFAULT' and 'COMPACT' can share the same code.
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            layout.label(text=item.name + " - " + item.folderName)
-            layout.prop(item, "active")
+            AAR_props = context.scene.AnimAutoRender_properties
+            
+            layout.label(text=item.name)
+            
+            if not AAR_props.animations_same_name:
+                layout.label(item.folderName)
+            
+            layout.prop(item, "enabled")
             
         # 'GRID' layout type should be as compact as possible (typically a single icon!).
         elif self.layout_type in {'GRID'}:
@@ -47,16 +52,24 @@ class AnimAutoRender_UL_animation(bpy.types.UIList):
 class AnimAutoRender_UL_direction(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # draw_item must handle the three layout types... Usually 'DEFAULT' and 'COMPACT' can share the same code.
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
+        AAR_props = context.scene.AnimAutoRender_properties
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            layout.label(text=item.name + " - " + item.folderName + " - " + "%d" % math.degrees(item.direction) + '\N{DEGREE SIGN}')
-            if AnimAutoRender_props.animation_collection_index >= 0:
-                layout.prop(AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].chosenDirection[index], "directionEnable")
+            layout.label(text=item.name)
+            
+            if not AAR_props.directions_same_name:
+                layout.label(item.folderName)
+            
+            layout.label("%d" % math.degrees(item.direction) +'\N{DEGREE SIGN}')
+            
+            if AAR_props.animation_collection_index >= 0:
+                layout.prop(AAR_props.animation_collection[AAR_props.animation_collection_index].chosenDirection[index],
+                            "enabled")
             
         # 'GRID' layout type should be as compact as possible (typically a single icon!).
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
-            layout.label(text=item.name + " - " + item.folderName + " - " + "%d" % math.degrees(item.direction) + '\N{DEGREE SIGN}')
+            layout.label(text=item.name + " - " + item.folderName + " - " +
+                         "%d" % math.degrees(item.direction) + '\N{DEGREE SIGN}')
 
       
 class AnimAutoRender_UL_frame(bpy.types.UIList):
@@ -64,7 +77,7 @@ class AnimAutoRender_UL_frame(bpy.types.UIList):
         # draw_item must handle the three layout types... Usually 'DEFAULT' and 'COMPACT' can share the same code.
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             layout.label(text=str(item.frame))
-            layout.prop(item, "render")
+            layout.prop(item, "enabled")
             
         # 'GRID' layout type should be as compact as possible (typically a single icon!).
         elif self.layout_type in {'GRID'}:
@@ -88,15 +101,11 @@ class AnimAutoRender_OT_preset_options_add(bl_operators.presets.AddPresetBase, b
     bl_label = 'Add options preset'
     preset_menu = 'AnimAutoRender_MT_options_presets'
     preset_values = []
-    preset_defines = [
-        "AAR_p = bpy.context.scene.AnimAutoRender_properties"
-    ]
+    preset_defines = ["AAR_p = bpy.context.scene.AnimAutoRender_properties"]
     preset_subdir = 'AnimAutoRender/Options'
     
     def execute(self, context):
-        self.preset_values = [
-            'AAR_p.%s' % v for v in context.scene.AnimAutoRender_properties.propsToExport()
-        ]
+        self.preset_values = ['AAR_p.%s' % v for v in context.scene.AnimAutoRender_properties.propsToExport()]
         return super().execute(context)
     
     
@@ -142,6 +151,10 @@ class AnimAutoRender_OT_preset_animations_add(bl_operators.presets.AddPresetBase
         return super().execute(context)
 
 
+def SecToStr(secs):
+    mins, secs = divmod(secs, 60)
+    hours, mins = divmod(mins, 60)
+    return '%02d:%02d:%02.2f' % (hours, mins, secs)
 #
 #    Panel
 #
@@ -154,7 +167,7 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         
-        animAutoRender_props = context.scene.AnimAutoRender_properties
+        AAR_props = context.scene.AnimAutoRender_properties
         
         #
         #    Rendering
@@ -167,23 +180,24 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         col.alert = True
         enableRendering = True
         
-        framesToRenderCount = sum( sum(1 for y in a.chosenDirection if y.directionEnable) * sum(1 for y in a.frames if y.render) for a in animAutoRender_props.animation_collection)
+        framesToRenderCount = sum( sum(1 for y in a.chosenDirection if y.enabled) * sum(1 for y in a.frames if y.enabled)
+                                   for a in AAR_props.animation_collection if a.enabled)
         
-        if animAutoRender_props.mainObject and len(bpy.data.actions) > 1:
-            for animation in animAutoRender_props.animation_collection:
-                if bpy.data.actions.find(animation.actionProp) < 0:
+        if AAR_props.mainObject and len(bpy.data.actions) > 1:
+            for animation in AAR_props.animation_collection:
+                if animation.enabled and bpy.data.actions.find(animation.actionProp) < 0:
                     enableRendering = False
                     col.label("Missing or wrong action define in " + animation.name, icon='ERROR')
         
-        if animAutoRender_props.specifyMainObject and context.scene.objects.find(animAutoRender_props.mainObject) < 0:
+        if AAR_props.specifyMainObject and context.scene.objects.find(AAR_props.mainObject) < 0:
             enableRendering = False
             col.label("Missing or wrong main object", icon='ERROR')
         
-        if len(animAutoRender_props.animation_collection) == 0:
+        if len(AAR_props.animation_collection) == 0:
             enableRendering = False
             col.label("Empty list of animations", icon='ERROR')
             
-        if len(animAutoRender_props.directionList) == 0:
+        if len(AAR_props.directionList) == 0:
             enableRendering = False
             col.label("Empty list of directions", icon='ERROR')
             
@@ -191,38 +205,40 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
             enableRendering = False
             col.label("No frames to render", icon='ERROR')
         
-        row.enabled = enableRendering and not animAutoRender_props.rendering
+        row.enabled = enableRendering and not AAR_props.rendering
         
-        if animAutoRender_props.rendering:
+        if AAR_props.rendering:
             col = layout.column()
-            col.label(text="RENDERING ANIMATION: " + "%d" % animAutoRender_props.frames_done + "/" + "%d" % animAutoRender_props.total_frames)
-            col.prop(animAutoRender_props, 'percentage')
-            col.label("Total time: " + str(timedelta(seconds = animAutoRender_props.totalTime)))
+            col.label(text="RENDERING ANIMATION: " + "%d" % AAR_props.frames_done + "/" +
+                      "%d" % AAR_props.total_frames)
+            col.prop(AAR_props, 'percentage')
+            col.label("Total time: " + SecToStr(AAR_props.totalTime))
             
-            if animAutoRender_props.frames_done > 0:
-                averageRenderTime = animAutoRender_props.totalTime / animAutoRender_props.frames_done
-                col.label("Average render time: " + str(timedelta(seconds = averageRenderTime)))
-                col.label("Estimated time to finish: " + str(timedelta(seconds = averageRenderTime * (animAutoRender_props.total_frames - animAutoRender_props.frames_done) )))
+            if AAR_props.frames_done > 0:
+                averageRenderTime = AAR_props.totalTime / AAR_props.frames_done
+                col.label("Average render time: " + SecToStr(averageRenderTime))
+                col.label("Estimated time to finish: " +
+                          SecToStr(averageRenderTime *(AAR_props.total_frames - AAR_props.frames_done) ))
             
             col.enabled = True
         else:
-            if animAutoRender_props.totalTime > 0:
-                col.label("Last render total time: " + str(timedelta(seconds = animAutoRender_props.totalTime)))
+            if AAR_props.totalTime > 0:
+                col.label("Last render time: " + SecToStr(AAR_props.totalTime))
             
             layout.label(text="Total frames to render: " + "%d" % framesToRenderCount)
         
         layout.separator()
         
         layout = layout.column()
-        layout.enabled = not animAutoRender_props.rendering
+        layout.enabled = not AAR_props.rendering
         
         #
         #    Options
         #
         row = layout.row(align=True)
         
-        if animAutoRender_props.options_expand:
-            row.prop(animAutoRender_props, "options_expand", icon="DOWNARROW_HLT", text="", icon_only=True, emboss=False)
+        if AAR_props.options_expand:
+            row.prop(AAR_props, "options_expand", icon="DOWNARROW_HLT", text="", icon_only=True, emboss=False)
             row.label(text="Options")
             
             row = layout.row(align=True)
@@ -230,32 +246,34 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
             row.operator("animautorender.options_preset_add", text="", icon="ZOOMIN")
             row.operator("animautorender.options_preset_add", text="", icon="ZOOMOUT").remove_active = True
             
-            layout.prop(animAutoRender_props, 'save_path') 
-            layout.prop(animAutoRender_props, 'first_frame_index')
-            layout.prop(animAutoRender_props, 'repeat_go_to_frame')
-            layout.prop(animAutoRender_props, 'simple_frame_name')
+            layout.prop(AAR_props, 'save_path') 
+            layout.prop(AAR_props, 'first_frame_index')
+            layout.prop(AAR_props, 'repeat_go_to_frame')
+            layout.prop(AAR_props, 'simple_frame_name')
             
-            if not animAutoRender_props.simple_frame_name:
+            if not AAR_props.simple_frame_name:
                 layout.separator()
                 layout.label(text="Filename options")
                 
                 row = layout.row()
-                row.prop(animAutoRender_props, 'frame_number_digits')
-                row.prop(animAutoRender_props, 'file_name_separator')
-                layout.prop(animAutoRender_props, 'use_anim_folder_name')
-                layout.prop(animAutoRender_props, 'use_dir_folder_name')
+                row.prop(AAR_props, 'frame_number_digits')
+                row.prop(AAR_props, 'file_name_separator')
+                layout.prop(AAR_props, 'use_anim_folder_name')
+                layout.prop(AAR_props, 'use_dir_folder_name')
                 
-                exampleName = (("anim" + animAutoRender_props.file_name_separator) if animAutoRender_props.use_anim_folder_name else "") + (("dir" + animAutoRender_props.file_name_separator) if animAutoRender_props.use_dir_folder_name else "") + ("%0" + str(animAutoRender_props.frame_number_digits) + "d") % 1
+                exampleName = ((("anim" + AAR_props.file_name_separator) if AAR_props.use_anim_folder_name else "") +
+                               (("dir" + AAR_props.file_name_separator) if AAR_props.use_dir_folder_name else "") +
+                                ("%0" + str(AAR_props.frame_number_digits) + "d") % 1)
                 
                 layout.label(text="Example: " + exampleName + context.scene.render.file_extension)
             
-            layout.prop(animAutoRender_props, 'specifyMainObject')
-            if animAutoRender_props.specifyMainObject:
+            layout.prop(AAR_props, 'specifyMainObject')
+            if AAR_props.specifyMainObject:
                 row = layout.row(align=True)
-                row.prop_search(animAutoRender_props, "mainObject", context.scene, "objects")
+                row.prop_search(AAR_props, "mainObject", context.scene, "objects")
                 row.operator("animautorender.use_current_object", icon="OBJECT_DATA", text="")
         else:
-            row.prop(animAutoRender_props, "options_expand", icon="RIGHTARROW", text="", icon_only=True, emboss=False)
+            row.prop(AAR_props, "options_expand", icon="RIGHTARROW", text="", icon_only=True, emboss=False)
             row.label(text="Options")
         
         
@@ -265,10 +283,13 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         #    Directions menu
         #
         row = layout.row()
-        if animAutoRender_props.animation_collection_index < 0:
+        if AAR_props.animation_collection_index < 0:
             row.label(text="Directions")
         else:
-            row.label(text="Directions: " + "%d" % sum(1 for y in animAutoRender_props.animation_collection[animAutoRender_props.animation_collection_index].chosenDirection if y.directionEnable) + " / " + "%d" % len(animAutoRender_props.animation_collection[animAutoRender_props.animation_collection_index].chosenDirection))
+            row.label(text="Directions: " +
+                      "%d" % sum(1 for y in AAR_props.animation_collection[AAR_props.animation_collection_index].chosenDirection
+                                 if y.enabled) + " / " +
+                                 "%d" % len(AAR_props.animation_collection[AAR_props.animation_collection_index].chosenDirection))
         
         row = layout.row(align=True)
         row.menu("AnimAutoRender_MT_directions_presets", text=bpy.types.AnimAutoRender_MT_directions_presets.bl_label)
@@ -276,36 +297,33 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         row.operator("animautorender.directions_preset_add", text="", icon="ZOOMOUT").remove_active = True
         
         row = layout.row(align=True)
-        row.template_list("AnimAutoRender_UL_direction", "", animAutoRender_props, "directionList", animAutoRender_props, "directionList_index", rows=3)
+        row.template_list("AnimAutoRender_UL_direction", "", AAR_props, "directionList", AAR_props, "directionList_index", rows=3)
         col = row.column(align=True)
         
         col.operator("animautorender.add_direction", icon="ZOOMIN", text="")
-        
         col.operator("animautorender.remove_direction", icon="ZOOMOUT", text="")
-        
         col.operator("animautorender.clear_direction", icon="X", text="")
-        
         col.operator("animautorender.invert_selection_direction", icon="FILE_REFRESH", text="")
         
         #
         #    Options to selected direction
         #
-        if animAutoRender_props.directionList and animAutoRender_props.directionList_index >= 0:
+        if AAR_props.directionList and AAR_props.directionList_index >= 0:
             row = layout.row()
-            if animAutoRender_props.directions_expand:
-                row.prop(animAutoRender_props, "directions_expand", icon="DOWNARROW_HLT", text="", icon_only=True, emboss=False)
+            if AAR_props.directions_expand:
+                row.prop(AAR_props, "directions_expand", icon="DOWNARROW_HLT", text="", icon_only=True, emboss=False)
                 row.label(text="Direction properties")
-                direction = animAutoRender_props.directionList[animAutoRender_props.directionList_index]
+                direction = AAR_props.directionList[AAR_props.directionList_index]
                 
-                layout.prop(animAutoRender_props, "directions_same_name")
+                layout.prop(AAR_props, "directions_same_name")
                 
-                if not animAutoRender_props.directions_same_name:
+                if not AAR_props.directions_same_name:
                     layout.prop(direction, "name")
                     
                 layout.prop(direction, "folderName")
                 layout.prop(direction, "direction")
             else:
-                row.prop(animAutoRender_props, "directions_expand", icon="RIGHTARROW", text="", icon_only=True, emboss=False)
+                row.prop(AAR_props, "directions_expand", icon="RIGHTARROW", text="", icon_only=True, emboss=False)
                 row.label(text="Direction properties")
         
         layout.separator()
@@ -315,7 +333,8 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         #    Animations menu
         #
         row = layout.row()
-        row.label(text="Animations: " + "%d" % sum(1 for y in animAutoRender_props.animation_collection if y.active) + " / " + "%d" % len(animAutoRender_props.animation_collection))
+        row.label(text="Animations: " + "%d" % sum(1 for y in AAR_props.animation_collection if y.enabled) + " / " +
+                  "%d" % len(AAR_props.animation_collection))
         
         '''
         row = layout.row(align=True)
@@ -326,37 +345,33 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         
         
         row = layout.row(align=True)
-        row.template_list("AnimAutoRender_UL_animation", "", animAutoRender_props, "animation_collection", animAutoRender_props, "animation_collection_index", rows=3)
+        row.template_list("AnimAutoRender_UL_animation", "", AAR_props, "animation_collection", AAR_props,
+                          "animation_collection_index", rows=3)
         col = row.column(align=True)
         
         col.operator("animautorender.add_animation", icon="ZOOMIN", text="")
-        
         col.operator("animautorender.remove_animation", icon="ZOOMOUT", text="")
-        
         col.operator("animautorender.clear_animation", icon="X", text="")
-        
         col.operator("animautorender.invert_selection_animation", icon="FILE_REFRESH", text="")
         
         #
         #    Options to selected animation
         #
-        if animAutoRender_props.animation_collection and animAutoRender_props.animation_collection_index >= 0:
-            entry = animAutoRender_props.animation_collection[animAutoRender_props.animation_collection_index]
+        if AAR_props.animation_collection and AAR_props.animation_collection_index >= 0:
+            entry = AAR_props.animation_collection[AAR_props.animation_collection_index]
             
             row = layout.row()
-            if animAutoRender_props.animations_expand:
-                row.prop(animAutoRender_props, "animations_expand", icon="DOWNARROW_HLT", text="", icon_only=True, emboss=False)
+            if AAR_props.animations_expand:
+                row.prop(AAR_props, "animations_expand", icon="DOWNARROW_HLT", text="", icon_only=True, emboss=False)
                 row.label(text="Animation properties")
                 
-                layout.prop(animAutoRender_props, "animations_same_name")
+                layout.prop(AAR_props, "animations_same_name")
                 
-                if not animAutoRender_props.animations_same_name:
+                if not AAR_props.animations_same_name:
                     layout.prop(entry, "name")
                     
                 layout.prop(entry, "folderName")
-                
                 layout.prop(entry, "go_through_cycle_count")
-                
                 layout.prop(entry, "repeat_first_frame")
                 
                 
@@ -365,35 +380,29 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
                     layout.prop(entry, "first_frame_index")
                     layout.prop(entry, "use_index_of_first_frame")
                 
-                if animAutoRender_props.mainObject and len(bpy.data.actions) > 1:
+                if AAR_props.mainObject and len(bpy.data.actions) > 1:
                     layout.prop_search(entry, "actionProp", bpy.data, "actions")
                     
             else:
-                row.prop(animAutoRender_props, "animations_expand", icon="RIGHTARROW", text="", icon_only=True, emboss=False)
+                row.prop(AAR_props, "animations_expand", icon="RIGHTARROW", text="", icon_only=True, emboss=False)
                 row.label(text="Animation properties")
                 
-            
             layout.separator()
             
             #
             #    Frames menu
             #
             row = layout.row()
-            row.label(text="Frames: " + "%d" % sum(1 for y in entry.frames if y.render) + " / " + "%d" % len(entry.frames))
+            row.label(text="Frames: " + "%d" % sum(1 for y in entry.frames if y.enabled) + " / " + "%d" % len(entry.frames))
             row = layout.row(align=True)
             row.template_list("AnimAutoRender_UL_frame", "", entry, "frames", entry, "frames_index", rows=5)
             col = row.column(align=True)
             
             col.operator("animautorender.add_frame", icon="ZOOMIN", text="")
-            
             col.operator("animautorender.remove_frame", icon="ZOOMOUT", text="")
-            
             col.operator("animautorender.add_next_frame", icon="FORWARD", text="")
-            
             col.operator("animautorender.add_range_frame", icon="ARROW_LEFTRIGHT", text="")
-            
             col.operator("animautorender.clear_frame", icon="X", text="")
-            
             col.operator("animautorender.invert_selection_frame", icon="FILE_REFRESH", text="")
             
             

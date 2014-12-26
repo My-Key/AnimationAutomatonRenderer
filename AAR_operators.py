@@ -35,17 +35,17 @@ class ANIMAUTORENDER_OT_add_direction(bpy.types.Operator):
     bl_description = "Add direction"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
+        AAR_props = context.scene.AnimAutoRender_properties
         
-        collection = AnimAutoRender_props.directionList
+        collection = AAR_props.directionList
         added = collection.add()        # This add at the end of the collection list
         added.name = "Dir"+ str(len(collection))
         added.folderName = "Dir"+ str(len(collection))
         
-        for item in AnimAutoRender_props.animation_collection:
+        for item in AAR_props.animation_collection:
             item.chosenDirection.add()
         
-        AnimAutoRender_props.directionList_index = len(collection) - 1
+        AAR_props.directionList_index = len(collection) - 1
        
         return {'FINISHED'}
     
@@ -55,13 +55,13 @@ class ANIMAUTORENDER_OT_clear_direction(bpy.types.Operator):
     bl_description = "Clear direction list"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
+        AAR_props = context.scene.AnimAutoRender_properties
         
-        collection = AnimAutoRender_props.directionList
+        collection = AAR_props.directionList
         collection.clear()
-        AnimAutoRender_props.directionList_index = -1
+        AAR_props.directionList_index = -1
         
-        for item in AnimAutoRender_props.animation_collection:
+        for item in AAR_props.animation_collection:
             item.chosenDirection.clear()
        
         return {'FINISHED'}
@@ -73,18 +73,18 @@ class ANIMAUTORENDER_OT_remove_direction(bpy.types.Operator):
     bl_description = "Remove direction"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
-        collection = AnimAutoRender_props.directionList
-        index = AnimAutoRender_props.directionList_index
+        AAR_props = context.scene.AnimAutoRender_properties
+        collection = AAR_props.directionList
+        index = AAR_props.directionList_index
         if index >= 0:
-            for item in AnimAutoRender_props.animation_collection:
+            for item in AAR_props.animation_collection:
                 item.chosenDirection.remove(index)
                 
             collection.remove(index)
-            AnimAutoRender_props.directionList_index -= 1
+            AAR_props.directionList_index -= 1
             
-            if AnimAutoRender_props.directionList_index < 0 and len(collection) > 0:
-                AnimAutoRender_props.directionList_index = 0
+            if AAR_props.directionList_index < 0 and len(collection) > 0:
+                AAR_props.directionList_index = 0
        
         return {'FINISHED'}
     
@@ -94,12 +94,12 @@ class ANIMAUTORENDER_OT_invert_selection_direction(bpy.types.Operator):
     bl_description = "Invert selection"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
-        index = AnimAutoRender_props.animation_collection_index
+        AAR_props = context.scene.AnimAutoRender_properties
+        index = AAR_props.animation_collection_index
         if index >= 0:
-            collection = AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].chosenDirection
+            collection = AAR_props.animation_collection[AAR_props.animation_collection_index].chosenDirection
             for item in collection:
-                item.directionEnable = not item.directionEnable
+                item.enabled = not item.enabled
        
         return {'FINISHED'}
     
@@ -113,17 +113,17 @@ class ANIMAUTORENDER_OT_add_animation(bpy.types.Operator):
     bl_description = "Add animation"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
-        collection = AnimAutoRender_props.animation_collection
+        AAR_props = context.scene.AnimAutoRender_properties
+        collection = AAR_props.animation_collection
         
         added = collection.add()
         added.name = "Anim"+ str(len(collection))
         added.folderName = "Anim"+ str(len(collection))
         
-        for _ in range(0, len(AnimAutoRender_props.directionList)):
+        for _ in range(0, len(AAR_props.directionList)):
             added.chosenDirection.add()
             
-        AnimAutoRender_props.animation_collection_index = len(collection) - 1
+        AAR_props.animation_collection_index = len(collection) - 1
        
         return {'FINISHED'}
     
@@ -133,12 +133,12 @@ class ANIMAUTORENDER_OT_clear_animation(bpy.types.Operator):
     bl_description = "Clear animation list"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
+        AAR_props = context.scene.AnimAutoRender_properties
         
-        collection = AnimAutoRender_props.animation_collection
+        collection = AAR_props.animation_collection
         collection.clear()
 
-        AnimAutoRender_props.animation_collection_index = -1
+        AAR_props.animation_collection_index = -1
        
         return {'FINISHED'}
 
@@ -149,16 +149,16 @@ class ANIMAUTORENDER_OT_remove_animation(bpy.types.Operator):
     bl_description = "Remove animation"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
-        collection = AnimAutoRender_props.animation_collection
-        index = AnimAutoRender_props.animation_collection_index
+        AAR_props = context.scene.AnimAutoRender_properties
+        collection = AAR_props.animation_collection
+        index = AAR_props.animation_collection_index
         
         if index >= 0:
             collection.remove(index)
-            AnimAutoRender_props.animation_collection_index -= 1
+            AAR_props.animation_collection_index -= 1
             
-            if AnimAutoRender_props.animation_collection_index < 0 and len(collection) > 0:
-                AnimAutoRender_props.animation_collection_index = 0
+            if AAR_props.animation_collection_index < 0 and len(collection) > 0:
+                AAR_props.animation_collection_index = 0
        
         return {'FINISHED'}
 
@@ -168,11 +168,11 @@ class ANIMAUTORENDER_OT_invert_selection_animation(bpy.types.Operator):
     bl_description = "Invert selection"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
+        AAR_props = context.scene.AnimAutoRender_properties
         
-        collection = AnimAutoRender_props.animation_collection
+        collection = AAR_props.animation_collection
         for item in collection:
-            item.active = not item.active
+            item.enabled = not item.enabled
        
         return {'FINISHED'}
     
@@ -186,8 +186,8 @@ class ANIMAUTORENDER_OT_add_frame(bpy.types.Operator):
     bl_description = "Add frame"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
-        collection = AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].frames
+        AAR_props = context.scene.AnimAutoRender_properties
+        collection = AAR_props.animation_collection[AAR_props.animation_collection_index].frames
         added = collection.add()
         added.frame = context.scene.frame_current
        
@@ -199,11 +199,11 @@ class ANIMAUTORENDER_OT_clear_frame(bpy.types.Operator):
     bl_description = "Clear frame list"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
-        collection = AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].frames
+        AAR_props = context.scene.AnimAutoRender_properties
+        collection = AAR_props.animation_collection[AAR_props.animation_collection_index].frames
         
         collection.clear()
-        AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].frames_index = -1
+        AAR_props.animation_collection[AAR_props.animation_collection_index].frames_index = -1
        
         return {'FINISHED'}
 
@@ -214,16 +214,16 @@ class ANIMAUTORENDER_OT_remove_frame(bpy.types.Operator):
     bl_description = "Remove frame"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
-        collection = AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].frames
-        index = AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].frames_index
+        AAR_props = context.scene.AnimAutoRender_properties
+        collection = AAR_props.animation_collection[AAR_props.animation_collection_index].frames
+        index = AAR_props.animation_collection[AAR_props.animation_collection_index].frames_index
         
         if index >= 0:                        
             collection.remove(index)
-            AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].frames_index -= 1
+            AAR_props.animation_collection[AAR_props.animation_collection_index].frames_index -= 1
             
-            if AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].frames_index < 0 and len(collection) > 0:
-                AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].frames_index = 0
+            if AAR_props.animation_collection[AAR_props.animation_collection_index].frames_index < 0 and len(collection) > 0:
+                AAR_props.animation_collection[AAR_props.animation_collection_index].frames_index = 0
        
         return {'FINISHED'}
     
@@ -233,9 +233,9 @@ class ANIMAUTORENDER_OT_current_frame(bpy.types.Operator):
     bl_description = "Set to current frame"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
-        collection = AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].frames
-        collection[AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].frames_index].frame = context.scene.frame_current
+        AAR_props = context.scene.AnimAutoRender_properties
+        animation = AAR_props.animation_collection[AAR_props.animation_collection_index]
+        animation.frames[animation.frames_index].frame = context.scene.frame_current
        
         return {'FINISHED'}
     
@@ -246,8 +246,8 @@ class ANIMAUTORENDER_OT_add_next_frame(bpy.types.Operator):
     bl_description = "Add next frame"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
-        collection = AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].frames
+        AAR_props = context.scene.AnimAutoRender_properties
+        collection = AAR_props.animation_collection[AAR_props.animation_collection_index].frames
         context.scene.frame_current += 1
         added = collection.add()
         added.frame = context.scene.frame_current
@@ -261,8 +261,8 @@ class ANIMAUTORENDER_OT_add_range_frame(bpy.types.Operator):
     bl_description = "Add frame from start to end"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
-        collection = AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].frames
+        AAR_props = context.scene.AnimAutoRender_properties
+        collection = AAR_props.animation_collection[AAR_props.animation_collection_index].frames
         for i in range(context.scene.frame_start, context.scene.frame_end + 1):
             added = collection.add()
             added.frame = i
@@ -275,12 +275,12 @@ class ANIMAUTORENDER_OT_invert_selection_frame(bpy.types.Operator):
     bl_description = "Invert selection"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
-        index = AnimAutoRender_props.animation_collection_index
+        AAR_props = context.scene.AnimAutoRender_properties
+        index = AAR_props.animation_collection_index
         if index >= 0:
-            collection = AnimAutoRender_props.animation_collection[AnimAutoRender_props.animation_collection_index].frames
+            collection = AAR_props.animation_collection[AAR_props.animation_collection_index].frames
             for item in collection:
-                item.render = not item.render
+                item.enabled = not item.enabled
        
         return {'FINISHED'}
    
@@ -294,7 +294,7 @@ class ANIMAUTORENDER_OT_use_current_object(bpy.types.Operator):
     bl_description = "Use current active object"
      
     def invoke(self, context, event):
-        AnimAutoRender_props = context.scene.AnimAutoRender_properties
-        AnimAutoRender_props.mainObject = context.active_object.name
+        AAR_props = context.scene.AnimAutoRender_properties
+        AAR_props.mainObject = context.active_object.name
        
         return {'FINISHED'}

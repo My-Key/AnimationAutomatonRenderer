@@ -28,43 +28,51 @@ import bpy.props
 import math
 
 def ANIMAUTORENDER_rename_direction(self, context):
-    obj = context.scene.AnimAutoRender_properties
-    if obj.directions_same_name:
-        direction = obj.directionList[obj.directionList_index]
+    AAR_props = context.scene.AnimAutoRender_properties
+    if AAR_props.directions_same_name:
+        direction = AAR_props.directionList[AAR_props.directionList_index]
         direction.name = direction.folderName
 
 def ANIMAUTORENDER_rename_animation(self, context):
-    obj = context.scene.AnimAutoRender_properties
-    if obj.animations_same_name:
-        animation = obj.animation_collection[obj.animation_collection_index]
+    AAR_props = context.scene.AnimAutoRender_properties
+    if AAR_props.animations_same_name:
+        animation = AAR_props.animation_collection[AAR_props.animation_collection_index]
         animation.name = animation.folderName
 
 
 class FrameListPropertyGroup(bpy.types.PropertyGroup):
     frame = bpy.props.IntProperty(name="Frame", default=0, min=0, options={'SKIP_SAVE'})
-    render = bpy.props.BoolProperty(name="", description="Render this frame", default = True, options={'SKIP_SAVE'})
+    enabled = bpy.props.BoolProperty(name="", description="Check if you want to render this frame", default = True, options={'SKIP_SAVE'})
 
 
 class DirectionEnableListPropertyGroup(bpy.types.PropertyGroup):
-    directionEnable = bpy.props.BoolProperty(name="", description="Render this direction", default = True, options={'SKIP_SAVE'})
+    enabled = bpy.props.BoolProperty(name="", description="Check if you want to render this direction", default=True, options={'SKIP_SAVE'})
 
 
 class DirectionListPropertyGroup(bpy.types.PropertyGroup):
     folderName = bpy.props.StringProperty(name="Folder name", subtype="FILE_NAME", update=ANIMAUTORENDER_rename_direction)
-    direction = bpy.props.FloatProperty(name="Direction", description="Direction in degrees", subtype = 'ANGLE', default = 0.0, min=-2*math.pi, max=2*math.pi)
+    direction = bpy.props.FloatProperty(name="Direction", description="Direction in degrees", subtype = 'ANGLE',
+                                        default = 0.0, min=-2*math.pi, max=2*math.pi)
     
 
 class AnimationListPropertyGroup(bpy.types.PropertyGroup):
-    folderName = bpy.props.StringProperty(name="Folder name", subtype="FILE_NAME", update=ANIMAUTORENDER_rename_animation, options={'SKIP_SAVE'})
-    active = bpy.props.BoolProperty(name="", description="Check if you want to export the action set.", default = True, options={'SKIP_SAVE'})
+    folderName = bpy.props.StringProperty(name="Folder name", subtype="FILE_NAME", update=ANIMAUTORENDER_rename_animation,
+                                          options={'SKIP_SAVE'})
+    enabled = bpy.props.BoolProperty(name="", description="Check if you want to render this animation.", default = True,
+                                    options={'SKIP_SAVE'})
     chosenDirection = bpy.props.CollectionProperty(type = DirectionEnableListPropertyGroup, options={'HIDDEN','SKIP_SAVE'})
     frames = bpy.props.CollectionProperty(type = FrameListPropertyGroup, options={'HIDDEN','SKIP_SAVE'})
     frames_index = bpy.props.IntProperty(min = -1, default = -1)
     
-    override_first_frame_index = bpy.props.BoolProperty(name="Override global first frame number", description="Override global first frame number", default = False, options={'SKIP_SAVE'})
+    override_first_frame_index = bpy.props.BoolProperty(name="Override global first frame number",
+                                                        description="Override global first frame number", default = False,
+                                                        options={'SKIP_SAVE'})
     first_frame_index = bpy.props.IntProperty(name="First frame number", min = 0, default = 0, options={'SKIP_SAVE'})
-    use_index_of_first_frame = bpy.props.BoolProperty(name="Frame number from first active frame", description="Get first frame number from first active frame", default = False, options={'SKIP_SAVE'})
-    go_through_cycle_count = bpy.props.IntProperty(name="Go through animation cycle X times", min = 0, default = 0, options={'SKIP_SAVE'})
+    use_index_of_first_frame = bpy.props.BoolProperty(name="Frame number from first active frame",
+                                                      description="Get first frame number from first active frame", default = False,
+                                                      options={'SKIP_SAVE'})
+    go_through_cycle_count = bpy.props.IntProperty(name="Go through animation cycle X times", min = 0, default = 0,
+                                                   options={'SKIP_SAVE'})
     repeat_first_frame = bpy.props.IntProperty(name="Repeat first frame X times", min = 0, default = 0, options={'SKIP_SAVE'})
     actionProp = bpy.props.StringProperty(name="Action", options={'SKIP_SAVE'})
 
@@ -77,29 +85,35 @@ class AnimAutoRenderPropertyGroup(bpy.types.PropertyGroup):
     directionList_index = bpy.props.IntProperty(min = -1, default = -1)
     first_frame_index = bpy.props.IntProperty(name="Global first frame number", min = 0, default = 0)
     
-    repeat_go_to_frame = bpy.props.BoolProperty(name="Go to frame twice", description="Go to frame twice to avoid driver or constraints delay bugs.", default = False)
+    repeat_go_to_frame = bpy.props.BoolProperty(name="Go to frame twice",
+                                                description="Go to frame twice to avoid driver or constraints delay bugs.",
+                                                default = False)
     
     options_expand = bpy.props.BoolProperty(name="Options", description="", default = True)
     
     directions_expand = bpy.props.BoolProperty(name="Direction properties", description="", default = True)
-    directions_same_name = bpy.props.BoolProperty(name="Same name and folder name", description="", default = False, update=ANIMAUTORENDER_rename_direction)
+    directions_same_name = bpy.props.BoolProperty(name="Same name and folder name", description="", default = False,
+                                                  update=ANIMAUTORENDER_rename_direction)
     
     animations_expand = bpy.props.BoolProperty(name="Animation properties", description="", default = True)
-    animations_same_name = bpy.props.BoolProperty(name="Same name and folder name", description="", default = False, update=ANIMAUTORENDER_rename_animation)
+    animations_same_name = bpy.props.BoolProperty(name="Same name and folder name", description="", default = False,
+                                                  update=ANIMAUTORENDER_rename_animation)
     
-    simple_frame_name = bpy.props.BoolProperty(name="Simple frame file name (4 digits)", description="Simple frame name (4 digits)", default = True)
+    simple_frame_name = bpy.props.BoolProperty(name="Simple frame file name (4 digits)",
+                                               description="Simple frame name (4 digits)", default = True)
     
     frame_number_digits = bpy.props.IntProperty(name="Frame number max digits", min = 2, default = 4)
-    use_anim_folder_name = bpy.props.BoolProperty(name="Use animation name in frame file name", description="Use animation name in frame file name", default = False)
-    use_dir_folder_name = bpy.props.BoolProperty(name="Use direction name in frame file name", description="Use direction name in frame file name", default = False)
+    use_anim_folder_name = bpy.props.BoolProperty(name="Use animation name in frame file name",
+                                                  description="Use animation name in frame file name", default = False)
+    use_dir_folder_name = bpy.props.BoolProperty(name="Use direction name in frame file name",
+                                                 description="Use direction name in frame file name", default = False)
     file_name_separator = bpy.props.StringProperty(name="Separator", default = "_")
     
     rendering = bpy.props.BoolProperty(description="", default = False)
     total_frames = bpy.props.IntProperty(min = 0, default = 0)
     frames_done = bpy.props.IntProperty(min = 0, default = 0)
     percentage = bpy.props.IntProperty(name="", subtype = 'PERCENTAGE', default = 0, min=0, max=100)
-    startTime = bpy.props.IntProperty(name="", default = 0)
-    totalTime = bpy.props.IntProperty(name="", default = 0)
+    totalTime = bpy.props.FloatProperty(name="", default = 0.0)
     
     specifyMainObject = bpy.props.BoolProperty(name="Specify main object", description="Specify main object", default = False)
     mainObject = bpy.props.StringProperty(name="Main object")
