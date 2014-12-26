@@ -24,7 +24,7 @@ Created by Maciej Paluszek
 #
 # ##### END GPL LICENSE BLOCK #####
 
-import bpy
+import bpy, time
 
 #
 #    Rendering modal operator
@@ -47,19 +47,23 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
             return self.cancel(context)
 
         if event.type == 'TIMER' and not self._updating:
+            AnimAutoRender_props = context.scene.AnimAutoRender_properties
             self._updating = True
+            AnimAutoRender_props.startTime = time.time()
             self.render_one_frame(context)
+            AnimAutoRender_props.totalTime += time.time() - AnimAutoRender_props.startTime
             self._updating = False
 
         return {'PASS_THROUGH'}
 
     def execute(self, context):
         AnimAutoRender_props = context.scene.AnimAutoRender_properties
-        
         if AnimAutoRender_props.mainObject and context.scene.objects.find(AnimAutoRender_props.mainObject) < 0:
             return {'CANCELLED'}
         
-        bpy.ops.object.mode_set(mode = 'OBJECT') 
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+        
+        AnimAutoRender_props.totalTime = 0
         
         if AnimAutoRender_props.mainObject and AnimAutoRender_props.specifyMainObject:
             bpy.ops.object.select_all(action='DESELECT') 
@@ -106,6 +110,7 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
         obj.total_frames = 0
         obj.rendering = False
         obj.frames_done = 0
+        obj.AnimAutoRender_props.percentage = 0
         wm = context.window_manager
         wm.event_timer_remove(self._timer)
         bpy.ops.render.view_show('INVOKE_DEFAULT')

@@ -26,6 +26,7 @@ Created by Maciej Paluszek
 
 import bpy, bl_operators
 import math
+from datetime import timedelta
 
 # 
 #    List elements
@@ -166,6 +167,8 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         col.alert = True
         enableRendering = True
         
+        framesToRenderCount = sum( sum(1 for y in a.chosenDirection if y.directionEnable) * sum(1 for y in a.frames if y.render) for a in animAutoRender_props.animation_collection)
+        
         if animAutoRender_props.mainObject and len(bpy.data.actions) > 1:
             for animation in animAutoRender_props.animation_collection:
                 if bpy.data.actions.find(animation.actionProp) < 0:
@@ -183,6 +186,10 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         if len(animAutoRender_props.directionList) == 0:
             enableRendering = False
             col.label("Empty list of directions", icon='ERROR')
+            
+        if framesToRenderCount == 0:
+            enableRendering = False
+            col.label("No frames to render", icon='ERROR')
         
         row.enabled = enableRendering and not animAutoRender_props.rendering
         
@@ -190,7 +197,19 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
             col = layout.column()
             col.label(text="RENDERING ANIMATION: " + "%d" % animAutoRender_props.frames_done + "/" + "%d" % animAutoRender_props.total_frames)
             col.prop(animAutoRender_props, 'percentage')
+            col.label("Total time: " + str(timedelta(seconds = animAutoRender_props.totalTime)))
+            
+            if animAutoRender_props.frames_done > 0:
+                averageRenderTime = animAutoRender_props.totalTime / animAutoRender_props.frames_done
+                col.label("Average render time: " + str(timedelta(seconds = averageRenderTime)))
+                col.label("Estimated time to finish: " + str(timedelta(seconds = averageRenderTime * (animAutoRender_props.total_frames - animAutoRender_props.frames_done) )))
+            
             col.enabled = True
+        else:
+            if animAutoRender_props.totalTime > 0:
+                col.label("Last render total time: " + str(timedelta(seconds = animAutoRender_props.totalTime)))
+            
+            layout.label(text="Total frames to render: " + "%d" % framesToRenderCount)
         
         layout.separator()
         
@@ -201,6 +220,7 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         #    Options
         #
         row = layout.row(align=True)
+        
         if animAutoRender_props.options_expand:
             row.prop(animAutoRender_props, "options_expand", icon="DOWNARROW_HLT", text="", icon_only=True, emboss=False)
             row.label(text="Options")

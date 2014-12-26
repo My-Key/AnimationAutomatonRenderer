@@ -98,6 +98,8 @@ class AnimAutoRenderPropertyGroup(bpy.types.PropertyGroup):
     total_frames = bpy.props.IntProperty(min = 0, default = 0)
     frames_done = bpy.props.IntProperty(min = 0, default = 0)
     percentage = bpy.props.IntProperty(name="", subtype = 'PERCENTAGE', default = 0, min=0, max=100)
+    startTime = bpy.props.IntProperty(name="", default = 0)
+    totalTime = bpy.props.IntProperty(name="", default = 0)
     
     specifyMainObject = bpy.props.BoolProperty(name="Specify main object", description="Specify main object", default = False)
     mainObject = bpy.props.StringProperty(name="Main object")
