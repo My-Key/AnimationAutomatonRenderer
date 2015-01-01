@@ -42,25 +42,40 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
     _frameIndex = 0
     _index = 0
     _defPath = ""
+    _startTime = 0.0
+    _frameDone = False
+    _nextFrameDelay = 0.0
 
     def modal(self, context, event):
         if event.type in {'ESC'} or self._calcs_done:
             return self.cancel(context)
-
+        
         if event.type == 'TIMER' and not self._updating:
-            AAR_props = context.scene.AnimAutoRender_properties
             self._updating = True
-            startTime = time.time()
-            self.render_one_frame(context)
-            AAR_props.totalTime += time.time() - startTime
-            self._updating = False
+            self._startTime = time.time()
+            self._updating = self.render_one_frame(context)
+            
+        if event.type == 'TIMER' and self._updating and self._frameDone:
+            self._nextFrameDelay += 0.1
+            
+            if self._nextFrameDelay >= 0.2:
+                self._frameDone = False
+                self._updating = False
+                self._nextFrameDelay = 0.0
 
         return {'PASS_THROUGH'}
+    
+    def complete_render(self, scene):
+        AAR_props = bpy.context.scene.AnimAutoRender_properties
+        AAR_props.totalTime += time.time() - self._startTime
+        self._frameDone = True
 
     def execute(self, context):
         AAR_props = context.scene.AnimAutoRender_properties
         if AAR_props.mainObject and context.scene.objects.find(AAR_props.mainObject) < 0:
             return {'CANCELLED'}
+        
+        bpy.app.handlers.render_complete.append(self.complete_render)
         
         bpy.ops.object.mode_set(mode = 'OBJECT')
         
@@ -93,11 +108,12 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
             AAR_props.total_frames += dirsCount * framesCount
         
         AAR_props.rendering = True
+        self._updating = False
+        self._frameDone = False
         
         wm = context.window_manager
         self._timer = wm.event_timer_add(0.1, context.window)
         wm.modal_handler_add(self)
-        bpy.ops.render.view_show('INVOKE_DEFAULT')
         return {'RUNNING_MODAL'}
 
     def cancel(self, context):
@@ -106,6 +122,10 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
         self._animationIndex = 0
         self._directionIndex = 0
         self._frameIndex = 0
+        self._updating = False
+        self._frameDone = False
+        
+        bpy.app.handlers.render_complete.remove(self.complete_render)
         
         AAR_props = context.scene.AnimAutoRender_properties
         AAR_props.total_frames = 0
@@ -114,7 +134,6 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
         AAR_props.percentage = 0
         wm = context.window_manager
         wm.event_timer_remove(self._timer)
-        bpy.ops.render.view_show('INVOKE_DEFAULT')
         return {'CANCELLED'}
     
     def render_one_frame(self, context):
@@ -133,7 +152,7 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
         
         if animation == None:
             self._calcs_done = True
-            return
+            return False
         
         if AAR_props.mainObject and len(bpy.data.actions) > 1 and self._directionIndex == 0 and self._frameIndex == 0:
             context.active_object.animation_data.action = bpy.data.actions[animation.actionProp]
@@ -197,10 +216,9 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
                         self._directionIndex += 1
                         self._frameIndex = 0
                         bpy.ops.object.rotation_clear()
-                        return
                     else:
                         if not frame.enabled:
-                            return
+                            return False
                         
                         animFolder = animation.folderName
                         separator = AAR_props.file_name_separator
@@ -226,8 +244,10 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
                             bpy.context.scene.frame_set(frame.frame)
                         
                         bpy.context.scene.frame_set(frame.frame)
-                        bpy.ops.render.render(write_still=True)
                         self._frameIndex += 1
                         self._index += 1
                         AAR_props.frames_done += 1
                         AAR_props.percentage = (AAR_props.frames_done / AAR_props.total_frames) * 100
+                        bpy.ops.render.render('INVOKE_DEFAULT', write_still=True)
+                        return True
+        return False
