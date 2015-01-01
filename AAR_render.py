@@ -26,6 +26,20 @@ Created by Maciej Paluszek
 
 import bpy, time
 
+class Frame_To_Render():
+    animationIndex = 0
+    directionIndex = 0
+    frameIndex = 0
+    render = True
+    dirsCount = 0
+    
+    def __init__(self, animIndex, dirIndex, frameIndex, dirsCount = 0, render = True):
+        self.animationIndex = animIndex
+        self.directionIndex = dirIndex
+        self.frameIndex = frameIndex
+        self.dirsCount = dirsCount
+        self.render = render
+    
 #
 #    Rendering modal operator
 #
@@ -37,14 +51,12 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
     _timer = None
     _calcs_done = False
     _updating = False
-    _animationIndex = 0
-    _directionIndex = 0
-    _frameIndex = 0
     _index = 0
     _defPath = ""
     _startTime = 0.0
     _frameDone = False
     _nextFrameDelay = 0.0
+    _framesList = []
 
     def modal(self, context, event):
         if event.type in {'ESC'} or self._calcs_done:
@@ -69,6 +81,9 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
         AAR_props = bpy.context.scene.AnimAutoRender_properties
         AAR_props.totalTime += time.time() - self._startTime
         self._frameDone = True
+        
+    def cancel_render(self, scene):
+        self._calcs_done = True
 
     def execute(self, context):
         AAR_props = context.scene.AnimAutoRender_properties
@@ -76,6 +91,7 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
             return {'CANCELLED'}
         
         bpy.app.handlers.render_complete.append(self.complete_render)
+        bpy.app.handlers.render_cancel.append(self.cancel_render)
         
         bpy.ops.object.mode_set(mode = 'OBJECT')
         
@@ -88,24 +104,8 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
         
         self._defPath = context.scene.render.filepath
         
-        for animation in AAR_props.animation_collection:
-            
-            if not animation.enabled:
-                continue
-            
-            dirsCount = 0
-            framesCount = 0
-            
-            for directionChosen in animation.chosenDirection:
-                if directionChosen.enabled:
-                    dirsCount += 1
-                 
-            if dirsCount > 0:
-                for frame in animation.frames:
-                    if not frame.enabled:
-                        continue
-                    framesCount+=1
-            AAR_props.total_frames += dirsCount * framesCount
+        AAR_props.total_frames = sum( sum(1 for y in a.chosenDirection if y.enabled) * sum(1 for y in a.frames if y.enabled)
+                                   for a in AAR_props.animation_collection if a.enabled)
         
         AAR_props.rendering = True
         self._updating = False
@@ -114,140 +114,132 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
         wm = context.window_manager
         self._timer = wm.event_timer_add(0.1, context.window)
         wm.modal_handler_add(self)
+        
+        self.create_list_of_frames(context)
         return {'RUNNING_MODAL'}
 
     def cancel(self, context):
         bpy.context.scene.render.filepath = self._defPath
-        context.area.header_text_set()
-        self._animationIndex = 0
-        self._directionIndex = 0
-        self._frameIndex = 0
+        
         self._updating = False
         self._frameDone = False
         
+        bpy.ops.object.rotation_clear()
+        
         bpy.app.handlers.render_complete.remove(self.complete_render)
+        bpy.app.handlers.render_cancel.remove(self.cancel_render)
         
         AAR_props = context.scene.AnimAutoRender_properties
         AAR_props.total_frames = 0
         AAR_props.rendering = False
         AAR_props.frames_done = 0
         AAR_props.percentage = 0
+        
         wm = context.window_manager
         wm.event_timer_remove(self._timer)
+        
         return {'CANCELLED'}
     
-    def render_one_frame(self, context):
+    def create_list_of_frames(self, context):
         AAR_props = context.scene.AnimAutoRender_properties
         
-        animation = None
-        
-        for _ in range(self._animationIndex, len(AAR_props.animation_collection)):
-            if AAR_props.animation_collection[self._animationIndex].enabled:
-                animation = AAR_props.animation_collection[self._animationIndex]
-                break
-            else:
-                self._animationIndex += 1
-                self._directionIndex = 0
-                self._frameIndex = 0
-        
-        if animation == None:
+        for animationIndex in range(len(AAR_props.animation_collection)):
+            animation = AAR_props.animation_collection[animationIndex]
+            if not animation.enabled:
+                continue
+            
+            dirsCount = 0
+                
+            for direction in animation.chosenDirection:
+                if direction.enabled:
+                    dirsCount += 1
+            
+            for directionIndex in range(len(animation.chosenDirection)):
+                direction = animation.chosenDirection[directionIndex]
+                
+                if not direction.enabled:
+                    continue
+                
+                for _ in range(animation.go_through_cycle_count):
+                    for frameIndex in range(len(animation.frames)):
+                        self._framesList.append(Frame_To_Render(animationIndex, directionIndex, frameIndex, render = False))
+                        
+                for _ in range(animation.repeat_first_frame):
+                    self._framesList.append(Frame_To_Render(animationIndex, directionIndex, 0, render = False))
+                        
+                for frameIndex in range(len(animation.frames)):
+                    if animation.frames[frameIndex].enabled:
+                        self._framesList.append(Frame_To_Render(animationIndex, directionIndex, frameIndex, dirsCount))
+                    
+    def render_one_frame(self, context):
+        if len(self._framesList) == 0:
             self._calcs_done = True
             return False
         
-        if AAR_props.mainObject and len(bpy.data.actions) > 1 and self._directionIndex == 0 and self._frameIndex == 0:
-            context.active_object.animation_data.action = bpy.data.actions[animation.actionProp]
+        AAR_props = context.scene.AnimAutoRender_properties
         
-        dirsCount = 0
-            
-        for directionChosen in animation.chosenDirection:
-            if directionChosen.enabled:
-                dirsCount += 1
+        ftr = None
+        animation = None
+        direction = None
+        frame = None
         
-        if dirsCount > 0:            
-            directionChosen = None
+        while len(self._framesList) > 0:
+            ftr = self._framesList.pop(0)
+            animation = AAR_props.animation_collection[ftr.animationIndex]
+            direction = AAR_props.directionList[ftr.directionIndex]
+            frame = animation.frames[ftr.frameIndex]
             
-            for _ in range(self._directionIndex, len(animation.chosenDirection)):
-                if animation.chosenDirection[self._directionIndex].enabled:
-                    directionChosen = animation.chosenDirection[self._directionIndex]
-                    break
+            bpy.context.scene.frame_set(frame.frame)
+            
+            if ftr.render:
+                break
+        
+        
+        firstActiveFrame = -1
+        
+        for i in range(len(animation.frames)):
+            if animation.frames[i].enabled:
+                firstActiveFrame = i
+                break
+        
+        if firstActiveFrame < 0:
+            return False
+        
+        if ftr.frameIndex == firstActiveFrame:
+            bpy.ops.object.rotation_clear()
+            bpy.ops.transform.rotate(value=direction.direction, axis=(0,0,1))
+            
+            if animation.override_first_frame_index:
+                if animation.use_index_of_first_frame:
+                    self._index = firstActiveFrame
                 else:
-                    self._directionIndex += 1
-                    self._frameIndex = 0
-                    
-            if directionChosen == None:
-                self._animationIndex += 1
-                self._directionIndex = 0
-                self._frameIndex = 0
+                    self._index = animation.first_frame_index
             else:
-                if directionChosen.enabled:
-                
-                    direction = AAR_props.directionList[self._directionIndex]
-                    
-                    if self._frameIndex == 0:
-                        bpy.ops.transform.rotate(value=direction.direction, axis=(0,0,1))
-                        if animation.override_first_frame_index:
-                            if animation.use_index_of_first_frame:
-                                for frame in animation.frames:
-                                    if frame.enabled:
-                                        self._index = frame.frame
-                                        break
-                            else:
-                                self._index = animation.first_frame_index
-                        else:
-                            self._index = AAR_props.first_frame_index
-                        
-                        for _ in range(animation.go_through_cycle_count):
-                            for frame in animation.frames:
-                                bpy.context.scene.frame_set(frame.frame)
-                                
-                        for _ in range(animation.repeat_first_frame):
-                            bpy.context.scene.frame_set(animation.frames[0].frame)
-                            
-                    frame = None
-                    
-                    for _ in range(self._frameIndex, len(animation.frames)):
-                        if animation.frames[self._frameIndex].enabled:
-                            frame = animation.frames[self._frameIndex]
-                            break
-                        else:
-                            self._frameIndex += 1
-                    
-                    if frame == None:
-                        self._directionIndex += 1
-                        self._frameIndex = 0
-                        bpy.ops.object.rotation_clear()
-                    else:
-                        if not frame.enabled:
-                            return False
-                        
-                        animFolder = animation.folderName
-                        separator = AAR_props.file_name_separator
-                        dirFolder = direction.folderName
-                        
-                        path = AAR_props.save_path + animFolder + "\\"
-                        
-                        if AAR_props.simple_frame_name:
-                            frameName = ("%04d") % self._index
-                        else:
-                            # animFolder_dirFolder_frameNumber
-                            frameName = (((animFolder + separator) if AAR_props.use_anim_folder_name else "") +
-                                         ((dirFolder + separator) if AAR_props.use_dir_folder_name else "") +
-                                         ("%0" + str(AAR_props.frame_number_digits) + "d") % self._index)
-                        
-                        
-                        if dirsCount > 1:
-                            bpy.context.scene.render.filepath = path + dirFolder + "\\" + frameName
-                        else:
-                            bpy.context.scene.render.filepath = path + frameName
-                        
-                        if AAR_props.repeat_go_to_frame:
-                            bpy.context.scene.frame_set(frame.frame)
-                        
-                        bpy.context.scene.frame_set(frame.frame)
-                        self._frameIndex += 1
-                        self._index += 1
-                        AAR_props.frames_done += 1
-                        AAR_props.percentage = (AAR_props.frames_done / AAR_props.total_frames) * 100
-                        bpy.ops.render.render('INVOKE_DEFAULT', write_still=True)
-                        return True
-        return False
+                self._index = AAR_props.first_frame_index
+        
+        animFolder = animation.folderName
+        separator = AAR_props.file_name_separator
+        dirFolder = direction.folderName
+        
+        path = AAR_props.save_path + animFolder + "\\"
+        
+        if AAR_props.simple_frame_name:
+            frameName = ("%04d") % self._index
+        else:
+            # animFolder_dirFolder_frameNumber
+            frameName = (((animFolder + separator) if AAR_props.use_anim_folder_name else "") +
+                         ((dirFolder + separator) if AAR_props.use_dir_folder_name else "") +
+                         ("%0" + str(AAR_props.frame_number_digits) + "d") % self._index)
+        
+        
+        bpy.context.scene.render.filepath = (path + dirFolder + "\\" + frameName) if ftr.dirsCount > 1 else (path + frameName)
+
+        if AAR_props.repeat_go_to_frame:
+            bpy.context.scene.frame_set(frame.frame)
+        
+        self._index += 1
+        AAR_props.frames_done += 1
+        AAR_props.percentage = (AAR_props.frames_done / AAR_props.total_frames) * 100
+        bpy.ops.render.render('INVOKE_DEFAULT', write_still=True)
+        
+        return True
