@@ -85,6 +85,21 @@ class AnimAutoRender_UL_frame(bpy.types.UIList):
             layout.label(text=str(item.frame))
 
 
+class PreviewLoopMenu(bpy.types.Menu):
+    bl_label = "Preview Loop Menu"
+    bl_idname = "VIEW3D_MT_preview_loop_menu"
+
+    def draw(self, context):
+        layout = self.layout
+
+        props = layout.operator("wm.context_set_value", text="Repeat", icon="FILE_REFRESH")
+        props.data_path = "scene.AnimAutoRender_properties.loopType"
+        props.value = "0"
+        
+        props = layout.operator("wm.context_set_value", text="Ping pong", icon="ARROW_LEFTRIGHT")
+        props.data_path = "scene.AnimAutoRender_properties.loopType"
+        props.value = "1"
+            
 #
 #    Presets
 #
@@ -229,8 +244,23 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         
         layout.separator()
         
+        
+        if not AAR_props.previewIsOn:
+            layout.operator("view3d.aar_preview", icon="PLAY", text="Preview - " + AAR_props.animation_collection[AAR_props.animation_collection_index].name)
+        else:
+            layout.operator("view3d.aar_preview", icon="PAUSE", text="Preview - " + AAR_props.animation_collection[AAR_props.animation_collection_index].name)
+            
+        row = layout.row()
+        col = row.column()
+        col.prop(AAR_props, 'previewFPS')
+        col.enabled = not AAR_props.previewIsOn
+        row.menu('VIEW3D_MT_preview_loop_menu', text="Repeat" if AAR_props.loopType == 0 else "Ping pong",
+                 icon="FILE_REFRESH" if AAR_props.loopType == 0 else "ARROW_LEFTRIGHT")
+        
+        layout.separator()
+        
         layout = layout.column()
-        layout.enabled = not AAR_props.rendering
+        layout.enabled = not AAR_props.rendering and not AAR_props.previewIsOn
         
         #
         #    Options

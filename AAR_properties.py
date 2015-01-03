@@ -115,6 +115,10 @@ class AnimAutoRenderPropertyGroup(bpy.types.PropertyGroup):
     percentage = bpy.props.IntProperty(name="", subtype = 'PERCENTAGE', default = 0, min=0, max=100)
     totalTime = bpy.props.FloatProperty(name="", default = 0.0)
     
+    previewFPS = bpy.props.IntProperty(name="FPS", min = 1, default = 24, max = 60)
+    previewIsOn = bpy.props.BoolProperty(description="", default = False)
+    loopType = bpy.props.IntProperty(name="Loop", min = 0, default = 0, max = 1)
+    
     specifyMainObject = bpy.props.BoolProperty(name="Specify main object", description="Specify main object", default = False)
     mainObject = bpy.props.StringProperty(name="Main object")
     

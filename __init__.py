@@ -30,7 +30,7 @@ bl_info = {
     "description": "Addon for rendering sprite animation",
     "author": "Maciej Paluszek (My-Key), EVERYDAYiPLAY",
     "location": "Render",
-    "version": (1, 0, 1)
+    "version": (1, 1, 2)
 }
 
 
@@ -40,12 +40,14 @@ if "bpy" in locals():
     imp.reload(AAR_properties)
     imp.reload(AAR_ui)
     imp.reload(AAR_render)
+    imp.reload(AAR_preview)
 else:
     import bpy
     from . import (AAR_operators,
                    AAR_properties,
                    AAR_ui,
-                   AAR_render)
+                   AAR_render,
+                   AAR_preview)
 
 import bpy.utils
 import bpy.props

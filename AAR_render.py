@@ -90,6 +90,8 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
         if AAR_props.mainObject and context.scene.objects.find(AAR_props.mainObject) < 0:
             return {'CANCELLED'}
         
+        AAR_props.previewIsOn = False
+        
         bpy.app.handlers.render_complete.append(self.complete_render)
         bpy.app.handlers.render_cancel.append(self.cancel_render)
         
