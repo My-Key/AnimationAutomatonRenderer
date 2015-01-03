@@ -244,13 +244,21 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         
         layout.separator()
         
+        animation = AAR_props.animation_collection[AAR_props.animation_collection_index]
         
-        if not AAR_props.previewIsOn:
-            layout.operator("view3d.aar_preview", icon="PLAY", text="Preview - " + AAR_props.animation_collection[AAR_props.animation_collection_index].name)
-        else:
-            layout.operator("view3d.aar_preview", icon="PAUSE", text="Preview - " + AAR_props.animation_collection[AAR_props.animation_collection_index].name)
+        if len(animation.frames) <= 1:
+            layout.label("Preview requires more than 1 frame", icon='ERROR')
             
-        row = layout.row()
+        col = layout.column()
+            
+        if not AAR_props.previewIsOn:
+            col.operator("view3d.aar_preview", icon="PLAY", text="Preview - " + animation.name)
+        else:
+            col.operator("view3d.aar_preview", icon="PAUSE", text="Preview - " + animation.name)
+        
+        col.enabled = len(animation.frames) > 1
+        
+        row = col.row()
         col = row.column()
         col.prop(AAR_props, 'previewFPS')
         col.enabled = not AAR_props.previewIsOn

@@ -55,7 +55,7 @@ class VIEW3D_OT_aar_preview(bpy.types.Operator):
                     self._index = 0
                 elif AAR_props.loopType == 1:
                     self._direction = -1
-                    self._index = len(animation.frames) - 1
+                    self._index = len(animation.frames) - 2
             
             frame = animation.frames[self._index]
             bpy.context.scene.frame_set(frame.frame)
