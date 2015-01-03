@@ -211,6 +211,9 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
             bpy.ops.object.rotation_clear()
             bpy.ops.transform.rotate(value=direction.direction, axis=(0,0,1))
             
+            if AAR_props.mainObject and len(bpy.data.actions) > 1:
+                context.active_object.animation_data.action = bpy.data.actions[animation.actionProp]
+            
             if animation.override_first_frame_index:
                 if animation.use_index_of_first_frame:
                     self._index = firstActiveFrame

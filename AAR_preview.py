@@ -28,7 +28,7 @@ import bpy
 
 
 class VIEW3D_OT_aar_preview(bpy.types.Operator):
-    """Operator which runs its self from a timer"""
+    """Animation Automaton Renderer preview operator"""
     bl_idname = "view3d.aar_preview"
     bl_label = "AAR Preview Operator"
 
@@ -74,6 +74,9 @@ class VIEW3D_OT_aar_preview(bpy.types.Operator):
         refresh = 1.0/AAR_props.previewFPS
         
         self._animationIndex = AAR_props.animation_collection_index
+        
+        if AAR_props.mainObject and len(bpy.data.actions) > 1:
+            context.active_object.animation_data.action = bpy.data.actions[AAR_props.animation_collection[self._animationIndex].actionProp]
         
         wm = context.window_manager
         self._timer = wm.event_timer_add(refresh, context.window)

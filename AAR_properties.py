@@ -46,7 +46,7 @@ class FrameListPropertyGroup(bpy.types.PropertyGroup):
 
 
 class DirectionEnableListPropertyGroup(bpy.types.PropertyGroup):
-    enabled = bpy.props.BoolProperty(name="", description="Check if you want to render this direction", default=True, options={'SKIP_SAVE'})
+    enabled = bpy.props.BoolProperty(name="", description="Check if you want to render this direction for active animation", default=True, options={'SKIP_SAVE'})
 
 
 class DirectionListPropertyGroup(bpy.types.PropertyGroup):
@@ -67,14 +67,15 @@ class AnimationListPropertyGroup(bpy.types.PropertyGroup):
     override_first_frame_index = bpy.props.BoolProperty(name="Override global first frame number",
                                                         description="Override global first frame number", default = False,
                                                         options={'SKIP_SAVE'})
-    first_frame_index = bpy.props.IntProperty(name="First frame number", min = 0, default = 0, options={'SKIP_SAVE'})
+    first_frame_index = bpy.props.IntProperty(name="First frame number", description="Set first frame number for this animation", min = 0, default = 0, options={'SKIP_SAVE'})
     use_index_of_first_frame = bpy.props.BoolProperty(name="Frame number from first active frame",
                                                       description="Get first frame number from first active frame", default = False,
                                                       options={'SKIP_SAVE'})
     go_through_cycle_count = bpy.props.IntProperty(name="Go through animation cycle X times", min = 0, default = 0,
-                                                   options={'SKIP_SAVE'})
-    repeat_first_frame = bpy.props.IntProperty(name="Repeat first frame X times", min = 0, default = 0, options={'SKIP_SAVE'})
-    actionProp = bpy.props.StringProperty(name="Action", options={'SKIP_SAVE'})
+                                                   description="Go through animation cycle X times (useful for slow parent)", options={'SKIP_SAVE'})
+    repeat_first_frame = bpy.props.IntProperty(name="Repeat first frame X times", description="Repeat first frame X times (useful for slow parent)",
+                                               min = 0, default = 0, options={'SKIP_SAVE'})
+    actionProp = bpy.props.StringProperty(name="Action", description="Specify action where animation is stored (it only stores name of action, it won't update when name of that action changes)", options={'SKIP_SAVE'})
 
 
 class AnimAutoRenderPropertyGroup(bpy.types.PropertyGroup):
@@ -83,31 +84,31 @@ class AnimAutoRenderPropertyGroup(bpy.types.PropertyGroup):
     
     directionList = bpy.props.CollectionProperty(type = DirectionListPropertyGroup)
     directionList_index = bpy.props.IntProperty(min = -1, default = -1)
-    first_frame_index = bpy.props.IntProperty(name="Global first frame number", min = 0, default = 0)
+    first_frame_index = bpy.props.IntProperty(name="Global first frame number", description="Global first frame number", min = 0, default = 0)
     
     repeat_go_to_frame = bpy.props.BoolProperty(name="Go to frame twice",
                                                 description="Go to frame twice to avoid driver or constraints delay bugs.",
                                                 default = False)
     
-    options_expand = bpy.props.BoolProperty(name="Options", description="", default = True)
+    options_expand = bpy.props.BoolProperty(name="Options", description="Expand/hide options", default = True)
     
-    directions_expand = bpy.props.BoolProperty(name="Direction properties", description="", default = True)
+    directions_expand = bpy.props.BoolProperty(name="Direction properties", description="Expand/hide direction properties", default = True)
     directions_same_name = bpy.props.BoolProperty(name="Same name and folder name", description="", default = False,
                                                   update=ANIMAUTORENDER_rename_direction)
     
-    animations_expand = bpy.props.BoolProperty(name="Animation properties", description="", default = True)
+    animations_expand = bpy.props.BoolProperty(name="Animation properties", description="Expand/hide animation properties", default = True)
     animations_same_name = bpy.props.BoolProperty(name="Same name and folder name", description="", default = False,
                                                   update=ANIMAUTORENDER_rename_animation)
     
     simple_frame_name = bpy.props.BoolProperty(name="Simple frame file name (4 digits)",
                                                description="Simple frame name (4 digits)", default = True)
     
-    frame_number_digits = bpy.props.IntProperty(name="Frame number max digits", min = 2, default = 4)
+    frame_number_digits = bpy.props.IntProperty(name="Frame number max digits", description="Frame number max digits", min = 2, default = 4)
     use_anim_folder_name = bpy.props.BoolProperty(name="Use animation name in frame file name",
                                                   description="Use animation name in frame file name", default = False)
     use_dir_folder_name = bpy.props.BoolProperty(name="Use direction name in frame file name",
                                                  description="Use direction name in frame file name", default = False)
-    file_name_separator = bpy.props.StringProperty(name="Separator", default = "_")
+    file_name_separator = bpy.props.StringProperty(name="Separator", description="Separates animation, direction and frame number in frame filename", default = "_")
     
     rendering = bpy.props.BoolProperty(description="", default = False)
     total_frames = bpy.props.IntProperty(min = 0, default = 0)
@@ -115,20 +116,15 @@ class AnimAutoRenderPropertyGroup(bpy.types.PropertyGroup):
     percentage = bpy.props.IntProperty(name="", subtype = 'PERCENTAGE', default = 0, min=0, max=100)
     totalTime = bpy.props.FloatProperty(name="", default = 0.0)
     
-    previewFPS = bpy.props.IntProperty(name="FPS", min = 1, default = 24, max = 60)
+    previewFPS = bpy.props.IntProperty(name="FPS", description="FPS preview will be displayed", min = 1, default = 24, max = 60)
     previewIsOn = bpy.props.BoolProperty(description="", default = False)
-    loopType = bpy.props.IntProperty(name="Loop", min = 0, default = 0, max = 1)
+    loopType = bpy.props.IntProperty(name="Loop", description="Type of preview loop", min = 0, default = 0, max = 1)
     
-    specifyMainObject = bpy.props.BoolProperty(name="Specify main object", description="Specify main object", default = False)
-    mainObject = bpy.props.StringProperty(name="Main object")
+    specifyMainObject = bpy.props.BoolProperty(name="Specify main object", default = False,
+                                               description="Specify main object which will be selected and rotated by Z axis by angles from direction list, else current object will be rotated")
+    mainObject = bpy.props.StringProperty(name="Main object", description="Main object will be selected and rotated by Z axis by angles from direction list (it only stores name of object, it won't update when name of that object changes)")
     
-    save_path = bpy.props.StringProperty \
-      (
-      name = "Save path",
-      default = "//",
-      description = "Define the path where animation will be saved",
-      subtype = 'DIR_PATH'
-      )  
+    save_path = bpy.props.StringProperty(name = "Save path", default = "//", description = "Define the path where animation will be saved", subtype = 'DIR_PATH')  
     
     def propsToExport(self):
         out = []
