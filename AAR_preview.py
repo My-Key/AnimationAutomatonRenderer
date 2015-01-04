@@ -44,28 +44,43 @@ class VIEW3D_OT_aar_preview(bpy.types.Operator):
 
         if event.type == 'TIMER':
             animation = AAR_props.animation_collection[self._animationIndex]
-            self._index += self._direction
             
-            if self._index < 0:
-                self._direction = 1
-                self._index = 1
+            frameEnabled = None
             
-            if self._index >= len(animation.frames):
-                if AAR_props.loopType == 0:
-                    self._index = 0
-                elif AAR_props.loopType == 1:
-                    self._direction = -1
-                    self._index = len(animation.frames) - 2
+            for _ in range(len(animation.frames) + 1):
+                self._index += self._direction
+                
+                if self._index < 0:
+                    self._direction = 1
+                    self._index = 1
+                
+                if self._index >= len(animation.frames):
+                    if AAR_props.loopType == 0:
+                        self._index = 0
+                    elif AAR_props.loopType == 1:
+                        self._direction = -1
+                        self._index = len(animation.frames) - 2
+                
+                frame = animation.frames[self._index]
+                if frame.enabled or not AAR_props.preview_skip_disabled_frames:
+                    frameEnabled = frame
+                    break
             
-            frame = animation.frames[self._index]
-            bpy.context.scene.frame_set(frame.frame)
+            if not frameEnabled:
+                return self.cancel(context)
+            
+            bpy.context.scene.frame_set(frameEnabled.frame)
 
         return {'PASS_THROUGH'}
 
     def execute(self, context):
         AAR_props = context.scene.AnimAutoRender_properties
         
-        if AAR_props.previewIsOn:
+        self._animationIndex = AAR_props.animation_collection_index
+        
+        animation = AAR_props.animation_collection[self._animationIndex]
+        
+        if AAR_props.previewIsOn or sum(1 for y in animation.frames if y.enabled) == 0:
             AAR_props.previewIsOn = False
             return {'CANCELLED'}
         
@@ -73,10 +88,8 @@ class VIEW3D_OT_aar_preview(bpy.types.Operator):
         
         refresh = 1.0/AAR_props.previewFPS
         
-        self._animationIndex = AAR_props.animation_collection_index
-        
         if AAR_props.mainObject and len(bpy.data.actions) > 1:
-            context.active_object.animation_data.action = bpy.data.actions[AAR_props.animation_collection[self._animationIndex].actionProp]
+            context.active_object.animation_data.action = bpy.data.actions[animation.actionProp]
         
         wm = context.window_manager
         self._timer = wm.event_timer_add(refresh, context.window)

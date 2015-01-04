@@ -245,9 +245,10 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         layout.separator()
         
         animation = AAR_props.animation_collection[AAR_props.animation_collection_index]
+        framesEnabledCount = sum(1 for y in animation.frames if y.enabled)
         
-        if len(animation.frames) <= 1:
-            layout.label("Preview requires more than 1 frame", icon='ERROR')
+        if framesEnabledCount <= 1:
+            layout.label("Preview requires more than 1 enabled frame", icon='ERROR')
             
         col = layout.column()
             
@@ -256,9 +257,10 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         else:
             col.operator("view3d.aar_preview", icon="PAUSE", text="Preview - " + animation.name)
         
-        col.enabled = len(animation.frames) > 1
+        col.enabled = framesEnabledCount > 1
         
         row = col.row()
+        col.prop(AAR_props, "preview_skip_disabled_frames")
         col = row.column()
         col.prop(AAR_props, 'previewFPS')
         col.enabled = not AAR_props.previewIsOn

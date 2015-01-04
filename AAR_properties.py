@@ -119,10 +119,12 @@ class AnimAutoRenderPropertyGroup(bpy.types.PropertyGroup):
     previewFPS = bpy.props.IntProperty(name="FPS", description="FPS preview will be displayed", min = 1, default = 24, max = 60)
     previewIsOn = bpy.props.BoolProperty(description="", default = False)
     loopType = bpy.props.IntProperty(name="Loop", description="Type of preview loop", min = 0, default = 0, max = 1)
+    preview_skip_disabled_frames = bpy.props.BoolProperty(name="Skip disabled frames",description="Check to skip disabled frames in preview", default = True)
     
     specifyMainObject = bpy.props.BoolProperty(name="Specify main object", default = False,
                                                description="Specify main object which will be selected and rotated by Z axis by angles from direction list, else current object will be rotated")
-    mainObject = bpy.props.StringProperty(name="Main object", description="Main object will be selected and rotated by Z axis by angles from direction list (it only stores name of object, it won't update when name of that object changes)")
+    mainObject = bpy.props.StringProperty(name="Main object",
+                                          description="Main object will be selected and rotated by Z axis by angles from direction list (it only stores name of object, it won't update when name of that object changes)")
     
     save_path = bpy.props.StringProperty(name = "Save path", default = "//", description = "Define the path where animation will be saved", subtype = 'DIR_PATH')  
     
