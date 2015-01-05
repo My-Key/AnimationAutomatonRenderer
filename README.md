@@ -12,3 +12,7 @@ This add-on automates rendering sprite animation by setting proper frame, rotati
 3. To selected animation add frames in frames list. You can add one by one or add range defined in timeline.
 4. Select object which you wan to bo rotated (like character's armature) and click "Rander animation" button in the top of panel to render all enabled animations.
 5. Enjoy! :)
+
+## GUI
+
+![alt tag](images/gui.jpg)
