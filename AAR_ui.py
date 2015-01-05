@@ -244,31 +244,37 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         
         layout.separator()
         
+        
+        animation = None
         if len(AAR_props.animation_collection) > 0:
             animation = AAR_props.animation_collection[AAR_props.animation_collection_index]
-            framesEnabledCount = sum(1 for y in animation.frames if y.enabled)
-            
-            if framesEnabledCount <= 1:
-                layout.label("Preview requires more than 1 enabled frame", icon='ERROR')
-                
-            col = layout.column()
-                
-            if not AAR_props.previewIsOn:
-                col.operator("view3d.aar_preview", icon="PLAY", text="Preview - " + animation.name)
-            else:
-                col.operator("view3d.aar_preview", icon="PAUSE", text="Preview - " + animation.name)
         
-            col.enabled = framesEnabledCount > 1
+        framesEnabledCount = (sum(1 for y in animation.frames if y.enabled) if animation else 0)
         
-            row = col.row()
-            col.prop(AAR_props, "preview_skip_disabled_frames")
-            col = row.column()
-            col.prop(AAR_props, 'previewFPS')
-            col.enabled = not AAR_props.previewIsOn
-            row.menu('VIEW3D_MT_preview_loop_menu', text="Repeat" if AAR_props.loopType == 0 else "Ping pong",
-                     icon="FILE_REFRESH" if AAR_props.loopType == 0 else "ARROW_LEFTRIGHT")
+        if framesEnabledCount <= 1 and animation:
+            layout.label("Preview requires more than 1 enabled frame", icon='ERROR')
+        
+        if not animation:
+            layout.label("No animation to preview", icon='ERROR')
             
-            layout.separator()
+        col = layout.column()
+            
+        if not AAR_props.previewIsOn:
+            col.operator("view3d.aar_preview", icon="PLAY", text="Preview - " + (animation.name if animation else ""))
+        else:
+            col.operator("view3d.aar_preview", icon="PAUSE", text="Preview - " + (animation.name if animation else ""))
+    
+        col.enabled = framesEnabledCount > 1
+    
+        row = col.row()
+        col.prop(AAR_props, "preview_skip_disabled_frames")
+        col = row.column()
+        col.prop(AAR_props, 'previewFPS')
+        col.enabled = not AAR_props.previewIsOn
+        row.menu('VIEW3D_MT_preview_loop_menu', text="Repeat" if AAR_props.loopType == 0 else "Ping pong",
+                 icon="FILE_REFRESH" if AAR_props.loopType == 0 else "ARROW_LEFTRIGHT")
+        
+        layout.separator()
         
         layout = layout.column()
         layout.enabled = not AAR_props.rendering and not AAR_props.previewIsOn
