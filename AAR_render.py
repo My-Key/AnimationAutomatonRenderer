@@ -143,6 +143,7 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
         return {'CANCELLED'}
     
     def create_list_of_frames(self, context):
+        self._framesList = []
         AAR_props = context.scene.AnimAutoRender_properties
         
         for animationIndex in range(len(AAR_props.animation_collection)):
