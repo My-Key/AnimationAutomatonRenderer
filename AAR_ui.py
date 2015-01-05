@@ -31,7 +31,7 @@ import math
 #    List elements
 #
 class AnimAutoRender_UL_animation(bpy.types.UIList):
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # draw_item must handle the three layout types... Usually 'DEFAULT' and 'COMPACT' can share the same code.
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             AAR_props = context.scene.AnimAutoRender_properties
@@ -144,7 +144,7 @@ class AnimAutoRender_OT_preset_directions_add(bl_operators.presets.AddPresetBase
 
         return super().execute(context)
     
-    
+"""
 class AnimAutoRender_MT_animations_presets(bpy.types.Menu):
     bl_label = "AnimAutoRender animations Presets"
     preset_subdir = "AnimAutoRender/Animations"
@@ -164,6 +164,7 @@ class AnimAutoRender_OT_preset_animations_add(bl_operators.presets.AddPresetBase
         self.preset_values = ['bpy.context.scene.AnimAutoRender_properties.animation_collection']
 
         return super().execute(context)
+"""
 
 
 def SecToStr(secs):

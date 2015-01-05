@@ -88,18 +88,19 @@ class ANIMAUTORENDER_OT_remove_direction(bpy.types.Operator):
        
         return {'FINISHED'}
     
-class ANIMAUTORENDER_OT_invert_selection_direction(bpy.types.Operator):
-    bl_label = "Invert selection"
+class ANIMAUTORENDER_OT_de_select_direction(bpy.types.Operator):
+    bl_label = "(De)select all"
     bl_idname = "animautorender.invert_selection_direction"  
-    bl_description = "Invert selection"
+    bl_description = "(De)select all"
      
     def invoke(self, context, event):
         AAR_props = context.scene.AnimAutoRender_properties
         index = AAR_props.animation_collection_index
         if index >= 0:
             collection = AAR_props.animation_collection[AAR_props.animation_collection_index].chosenDirection
+            enabledDirectionsCount = sum(1 for y in collection if y.enabled)
             for item in collection:
-                item.enabled = not item.enabled
+                item.enabled = enabledDirectionsCount == 0
        
         return {'FINISHED'}
     
@@ -162,20 +163,21 @@ class ANIMAUTORENDER_OT_remove_animation(bpy.types.Operator):
        
         return {'FINISHED'}
 
-class ANIMAUTORENDER_OT_invert_selection_animation(bpy.types.Operator):
-    bl_label = "Invert selection"
+class ANIMAUTORENDER_OT_de_select_animation(bpy.types.Operator):
+    bl_label = "(De)select all"
     bl_idname = "animautorender.invert_selection_animation"  
-    bl_description = "Invert selection"
+    bl_description = "(De)select all"
      
     def invoke(self, context, event):
         AAR_props = context.scene.AnimAutoRender_properties
         
         collection = AAR_props.animation_collection
+        enabledAnimationCount = sum(1 for y in collection if y.enabled)
         for item in collection:
-            item.enabled = not item.enabled
+            item.enabled = enabledAnimationCount == 0
        
         return {'FINISHED'}
-    
+
 
 #
 #    Frames
@@ -269,21 +271,21 @@ class ANIMAUTORENDER_OT_add_range_frame(bpy.types.Operator):
        
         return {'FINISHED'}
 
-class ANIMAUTORENDER_OT_invert_selection_frame(bpy.types.Operator):
-    bl_label = "Invert selection"
+class ANIMAUTORENDER_OT_de_select_frame(bpy.types.Operator):
+    bl_label = "(De)select all"
     bl_idname = "animautorender.invert_selection_frame"  
-    bl_description = "Invert selection"
+    bl_description = "(De)select all"
      
     def invoke(self, context, event):
         AAR_props = context.scene.AnimAutoRender_properties
         index = AAR_props.animation_collection_index
         if index >= 0:
             collection = AAR_props.animation_collection[AAR_props.animation_collection_index].frames
+            enabledFramesCount = sum(1 for y in collection if y.enabled)
             for item in collection:
-                item.enabled = not item.enabled
+                item.enabled = enabledFramesCount == 0
        
         return {'FINISHED'}
-   
    
 #
 #    Object
