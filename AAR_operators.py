@@ -89,9 +89,9 @@ class ANIMAUTORENDER_OT_remove_direction(bpy.types.Operator):
         return {'FINISHED'}
     
 class ANIMAUTORENDER_OT_de_select_direction(bpy.types.Operator):
-    bl_label = "(De)select all"
+    bl_label = "Disable/enable all"
     bl_idname = "animautorender.invert_selection_direction"  
-    bl_description = "(De)select all"
+    bl_description = "Disable/enable all"
      
     def invoke(self, context, event):
         AAR_props = context.scene.AnimAutoRender_properties
@@ -164,9 +164,9 @@ class ANIMAUTORENDER_OT_remove_animation(bpy.types.Operator):
         return {'FINISHED'}
 
 class ANIMAUTORENDER_OT_de_select_animation(bpy.types.Operator):
-    bl_label = "(De)select all"
+    bl_label = "Disable/enable all"
     bl_idname = "animautorender.invert_selection_animation"  
-    bl_description = "(De)select all"
+    bl_description = "Disable/enable all"
      
     def invoke(self, context, event):
         AAR_props = context.scene.AnimAutoRender_properties
@@ -272,9 +272,9 @@ class ANIMAUTORENDER_OT_add_range_frame(bpy.types.Operator):
         return {'FINISHED'}
 
 class ANIMAUTORENDER_OT_de_select_frame(bpy.types.Operator):
-    bl_label = "(De)select all"
+    bl_label = "Disable/enable all"
     bl_idname = "animautorender.invert_selection_frame"  
-    bl_description = "(De)select all"
+    bl_description = "Disable/enable all"
      
     def invoke(self, context, event):
         AAR_props = context.scene.AnimAutoRender_properties

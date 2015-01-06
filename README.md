@@ -16,3 +16,5 @@ This add-on automates rendering sprite animation by setting proper frame, rotati
 ## GUI
 
 ![alt tag](images/gui.jpg)
+![alt tag](images/options.jpg)
+![alt tag](images/animation.jpg)

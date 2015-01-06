@@ -51,7 +51,7 @@ class DirectionEnableListPropertyGroup(bpy.types.PropertyGroup):
 
 class DirectionListPropertyGroup(bpy.types.PropertyGroup):
     folderName = bpy.props.StringProperty(name="Folder name", subtype="FILE_NAME", update=ANIMAUTORENDER_rename_direction)
-    direction = bpy.props.FloatProperty(name="Direction", description="Direction in degrees", subtype = 'ANGLE',
+    direction = bpy.props.FloatProperty(name="Angle", description="Angle in degrees", subtype = 'ANGLE',
                                         default = 0.0, min=-2*math.pi, max=2*math.pi)
     
 
@@ -103,7 +103,7 @@ class AnimAutoRenderPropertyGroup(bpy.types.PropertyGroup):
     simple_frame_name = bpy.props.BoolProperty(name="Simple frame file name (4 digits)",
                                                description="Simple frame name (4 digits)", default = True)
     
-    frame_number_digits = bpy.props.IntProperty(name="Frame number max digits", description="Frame number max digits", min = 2, default = 4)
+    frame_number_digits = bpy.props.IntProperty(name="Frame number min digits", description="Minimum number of digits for frame number", min = 2, default = 4)
     use_anim_folder_name = bpy.props.BoolProperty(name="Use animation name in frame file name",
                                                   description="Use animation name in frame file name", default = False)
     use_dir_folder_name = bpy.props.BoolProperty(name="Use direction name in frame file name",
