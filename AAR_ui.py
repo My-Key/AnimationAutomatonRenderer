@@ -351,7 +351,7 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         col.operator("animautorender.add_direction", icon="ZOOMIN", text="")
         col.operator("animautorender.remove_direction", icon="ZOOMOUT", text="")
         col.operator("animautorender.clear_direction", icon="X", text="")
-        col.operator("animautorender.invert_selection_direction", icon="FILE_REFRESH", text="")
+        col.operator("animautorender.disable_enable_directions", icon="FILE_REFRESH", text="")
         
         #
         #    Options to selected direction
@@ -400,7 +400,7 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         col.operator("animautorender.add_animation", icon="ZOOMIN", text="")
         col.operator("animautorender.remove_animation", icon="ZOOMOUT", text="")
         col.operator("animautorender.clear_animation", icon="X", text="")
-        col.operator("animautorender.invert_selection_animation", icon="FILE_REFRESH", text="")
+        col.operator("animautorender.disable_enable_animations", icon="FILE_REFRESH", text="")
         
         #
         #    Options to selected animation
@@ -443,7 +443,7 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
             row = layout.row()
             row.label(text="Frames: " + "%d" % sum(1 for y in entry.frames if y.enabled) + " / " + "%d" % len(entry.frames))
             row = layout.row(align=True)
-            row.template_list("AnimAutoRender_UL_frame", "", entry, "frames", entry, "frames_index", rows=5)
+            row.template_list("AnimAutoRender_UL_frame", "", entry, "frames", entry, "frames_index", rows=6)
             col = row.column(align=True)
             
             col.operator("animautorender.add_frame", icon="ZOOMIN", text="")
@@ -451,7 +451,8 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
             col.operator("animautorender.add_next_frame", icon="FORWARD", text="")
             col.operator("animautorender.add_range_frame", icon="ARROW_LEFTRIGHT", text="")
             col.operator("animautorender.clear_frame", icon="X", text="")
-            col.operator("animautorender.invert_selection_frame", icon="FILE_REFRESH", text="")
+            col.operator("animautorender.disable_enable_frames", icon="FILE_REFRESH", text="")
+            col.operator("animautorender.keep_active_unique_frames", icon="SAVE_AS", text="")
             
             
             #

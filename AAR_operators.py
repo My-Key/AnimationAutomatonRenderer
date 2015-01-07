@@ -88,9 +88,9 @@ class ANIMAUTORENDER_OT_remove_direction(bpy.types.Operator):
        
         return {'FINISHED'}
     
-class ANIMAUTORENDER_OT_de_select_direction(bpy.types.Operator):
+class ANIMAUTORENDER_OT_disable_enable_directions(bpy.types.Operator):
     bl_label = "Disable/enable all"
-    bl_idname = "animautorender.invert_selection_direction"  
+    bl_idname = "animautorender.disable_enable_directions"  
     bl_description = "Disable/enable all"
      
     def invoke(self, context, event):
@@ -163,9 +163,9 @@ class ANIMAUTORENDER_OT_remove_animation(bpy.types.Operator):
        
         return {'FINISHED'}
 
-class ANIMAUTORENDER_OT_de_select_animation(bpy.types.Operator):
+class ANIMAUTORENDER_OT_disable_enable_animations(bpy.types.Operator):
     bl_label = "Disable/enable all"
-    bl_idname = "animautorender.invert_selection_animation"  
+    bl_idname = "animautorender.disable_enable_animations"  
     bl_description = "Disable/enable all"
      
     def invoke(self, context, event):
@@ -271,9 +271,9 @@ class ANIMAUTORENDER_OT_add_range_frame(bpy.types.Operator):
        
         return {'FINISHED'}
 
-class ANIMAUTORENDER_OT_de_select_frame(bpy.types.Operator):
+class ANIMAUTORENDER_OT_disable_enable_frames(bpy.types.Operator):
     bl_label = "Disable/enable all"
-    bl_idname = "animautorender.invert_selection_frame"  
+    bl_idname = "animautorender.disable_enable_frames"  
     bl_description = "Disable/enable all"
      
     def invoke(self, context, event):
@@ -284,6 +284,28 @@ class ANIMAUTORENDER_OT_de_select_frame(bpy.types.Operator):
             enabledFramesCount = sum(1 for y in collection if y.enabled)
             for item in collection:
                 item.enabled = enabledFramesCount == 0
+       
+        return {'FINISHED'}
+    
+class ANIMAUTORENDER_OT_keep_active_unique_frames(bpy.types.Operator):
+    bl_label = "Keep active only unique frames"
+    bl_idname = "animautorender.keep_active_unique_frames"  
+    bl_description = "Keep active only first frame of frames with the same number"
+     
+    def invoke(self, context, event):
+        AAR_props = context.scene.AnimAutoRender_properties
+        index = AAR_props.animation_collection_index
+        if index >= 0:
+            collection = AAR_props.animation_collection[AAR_props.animation_collection_index].frames
+            
+            list_of_used_frames = []
+            
+            for item in collection:
+                if item.frame not in list_of_used_frames:
+                    item.enabled = True
+                    list_of_used_frames.append(item.frame)
+                else:
+                    item.enabled = False
        
         return {'FINISHED'}
    
