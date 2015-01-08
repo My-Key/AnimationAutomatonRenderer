@@ -193,35 +193,56 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         row.operator("render.animation_automaton_render", icon="CLIP", text="Render animation")
         
         col = layout.column()
-        col.alert = True
         enableRendering = True
         
         framesToRenderCount = sum( sum(1 for y in a.chosenDirection if y.enabled) * sum(1 for y in a.frames if y.enabled)
                                    for a in AAR_props.animation_collection if a.enabled)
         
+        row2 = col.row()
+        
+        errorsCount = 0
+        
         if AAR_props.mainObject and len(bpy.data.actions) > 1:
             for animation in AAR_props.animation_collection:
                 if animation.enabled and bpy.data.actions.find(animation.actionProp) < 0:
                     enableRendering = False
-                    col.label("Missing or wrong action define in " + animation.name, icon='ERROR')
+                    errorsCount += 1
+                    if AAR_props.show_errors:
+                        col.label("Missing or wrong action define in " + animation.name, icon='ERROR')
         
         if AAR_props.specifyMainObject and context.scene.objects.find(AAR_props.mainObject) < 0:
             enableRendering = False
-            col.label("Missing or wrong main object", icon='ERROR')
+            errorsCount += 1
+            if AAR_props.show_errors:
+                col.label("Missing or wrong main object", icon='ERROR')
         
         if len(AAR_props.animation_collection) == 0:
             enableRendering = False
-            col.label("Empty list of animations", icon='ERROR')
+            errorsCount += 1
+            if AAR_props.show_errors:
+                col.label("Empty list of animations", icon='ERROR')
             
         if len(AAR_props.directionList) == 0:
             enableRendering = False
-            col.label("Empty list of directions", icon='ERROR')
+            errorsCount += 1
+            if AAR_props.show_errors:
+                col.label("Empty list of directions", icon='ERROR')
             
         if framesToRenderCount == 0:
             enableRendering = False
-            col.label("No frames to render", icon='ERROR')
+            errorsCount += 1
+            if AAR_props.show_errors:
+                col.label("No frames to render", icon='ERROR')
         
         row.enabled = enableRendering and not AAR_props.rendering
+        
+        if errorsCount > 0:
+            if AAR_props.show_errors:
+                row2.prop(AAR_props, "show_errors", icon="DOWNARROW_HLT", text="", icon_only=True, emboss=False)
+            else:
+                row2.prop(AAR_props, "show_errors", icon="RIGHTARROW", text="", icon_only=True, emboss=False)
+        
+        row2.label(text="Errors: " + str(errorsCount), icon='ERROR' if errorsCount > 0 else 'NONE')
         
         if AAR_props.rendering:
             col = layout.column()
@@ -252,12 +273,28 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         
         framesEnabledCount = (sum(1 for y in animation.frames if y.enabled) if animation else 0)
         
+        row = layout.row()
+        
+        errorsCount = 0
+        
         if framesEnabledCount <= 1 and animation:
-            layout.label("Preview requires more than 1 enabled frame", icon='ERROR')
+            errorsCount += 1
+            if AAR_props.preview_show_errors:
+                layout.label("Preview requires more than 1 enabled frame", icon='ERROR')
         
         if not animation:
-            layout.label("No animation to preview", icon='ERROR')
+            errorsCount += 1
+            if AAR_props.preview_show_errors:
+                layout.label("No animation to preview", icon='ERROR')
             
+        if errorsCount > 0:
+            if AAR_props.preview_show_errors:
+                row.prop(AAR_props, "preview_show_errors", icon="DOWNARROW_HLT", text="", icon_only=True, emboss=False)
+            else:
+                row.prop(AAR_props, "preview_show_errors", icon="RIGHTARROW", text="", icon_only=True, emboss=False)
+            
+        row.label(text="Preview errors: " + str(errorsCount), icon='ERROR' if errorsCount > 0 else 'NONE')
+        
         col = layout.column()
             
         if not AAR_props.previewIsOn:

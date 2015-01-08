@@ -128,6 +128,9 @@ class AnimAutoRenderPropertyGroup(bpy.types.PropertyGroup):
     
     save_path = bpy.props.StringProperty(name = "Save path", default = "//", description = "Define the path where animation will be saved", subtype = 'DIR_PATH')  
     
+    show_errors = bpy.props.BoolProperty(name="Show errors", default = False, description = "Expand/Hide errors")
+    preview_show_errors = bpy.props.BoolProperty(name="Show errors", default = False, description = "Expand/Hide errors")
+    
     def propsToExport(self):
         out = []
         out.append("save_path")
