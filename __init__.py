@@ -1,9 +1,6 @@
 '''
-Copyright (C) 2014 EVERYDAYiPLAY
-http://www.everydayiplay.com/
-contact@everydayiplay.com
-
 Created by Maciej Paluszek
+0my0key0@gmail.com
 '''
 
 # ##### BEGIN GPL LICENSE BLOCK #####
@@ -28,7 +25,7 @@ bl_info = {
     "name": "Animation Automaton Renderer",
     "category": "Render",
     "description": "Addon for rendering sprite animation",
-    "author": "Maciej Paluszek (My-Key), EVERYDAYiPLAY",
+    "author": "Maciej Paluszek (My-Key)",
     "location": "Render",
     "version": (1, 1, 2)
 }
