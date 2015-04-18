@@ -67,9 +67,7 @@ def remove_watcher_object(name):
         
         
 def name_change(object, new, old, scene):
-    print("old value: " + str(old))
     remove_watcher_object(str(old))
-    print("new value: " + str(new))
     
     if str(new) in watchersObjects:
         watchersObjects[str(new)].update()
@@ -122,9 +120,7 @@ def remove_watcher_action(name):
         del watchersActions[name]
    
 def name_change_action(object, new, old, scene, animationId):
-    print("old value: " + str(old))
     remove_watcher_action(str(old))
-    print("new value: " + str(new))
     
     if str(new) in watchersActions:
         watchersActions[str(new)].update()
@@ -154,10 +150,15 @@ def InitWatchers(scene):
         if scene.AnimAutoRender_properties.mainObject != "":
             add_watcher_object(str(scene.AnimAutoRender_properties.mainObject), 'name', name_change, scene)
         
-        for i in  range(len(scene.AnimAutoRender_properties.animation_collection)):
+        for i in range(len(scene.AnimAutoRender_properties.animation_collection)):
             animation = scene.AnimAutoRender_properties.animation_collection[i]
             if animation.actionProp != "":
                 add_watcher_action(str(animation.actionProp), 'name', name_change_action, scene, i)
+                
+def RegisterInitialisation(scene):
+    InitWatchers(None)
+    
+    bpy.app.handlers.scene_update_post.remove(RegisterInitialisation)
             
 def RemoveWatchers():
     if watcher in bpy.app.handlers.scene_update_post:

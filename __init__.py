@@ -51,6 +51,7 @@ else:
 import bpy.utils
 import bpy.props
 import math
+from bpy.app.handlers import persistent
 
 def register():
     bpy.utils.register_module(__name__)
@@ -60,7 +61,8 @@ def register():
     if AAR_watchers.InitWatchers not in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.append(AAR_watchers.InitWatchers)
     
-    AAR_watchers.InitWatchers(None)
+    bpy.app.handlers.scene_update_post.append(AAR_watchers.RegisterInitialisation)
+    
 
 def unregister():
     bpy.utils.unregister_module(__name__)
@@ -71,9 +73,6 @@ def unregister():
     AAR_watchers.RemoveWatchers()
         
     del bpy.types.Scene.AnimAutoRender_properties
-
-if AAR_watchers.InitWatchers not in bpy.app.handlers.load_post:
-    bpy.app.handlers.load_post.append(AAR_watchers.InitWatchers)
 
 if __name__ == "__main__" :
     register()
