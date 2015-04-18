@@ -23,6 +23,7 @@ Created by Maciej Paluszek
 
 import bpy.props
 import math
+from . import AAR_watchers
 
 def ANIMAUTORENDER_rename_direction(self, context):
     AAR_props = context.scene.AnimAutoRender_properties
@@ -35,6 +36,20 @@ def ANIMAUTORENDER_rename_animation(self, context):
     if AAR_props.animations_same_name:
         animation = AAR_props.animation_collection[AAR_props.animation_collection_index]
         animation.name = animation.folderName
+
+def ANIMAUTORENDER_change_mainObject(self, context):
+    AAR_props = context.scene.AnimAutoRender_properties
+    AAR_watchers.remove_watcher_object(AAR_props.mainObjectPrevValue)
+    AAR_watchers.add_watcher_object(AAR_props.mainObject, "name", AAR_watchers.name_change, bpy.context.scene)
+    AAR_props.mainObjectPrevValue = str(AAR_props.mainObject)
+    
+    
+def ANIMAUTORENDER_change_action(self, context):
+    AAR_props = context.scene.AnimAutoRender_properties
+    animation = AAR_props.animation_collection[AAR_props.animation_collection_index]
+    AAR_watchers.remove_watcher_action(animation.actionPropPrevVal)
+    AAR_watchers.add_watcher_action(animation.actionProp, "name", AAR_watchers.name_change_action, bpy.context.scene, AAR_props.animation_collection_index)
+    animation.actionPropPrevVal = str(animation.actionProp)
 
 
 class FrameListPropertyGroup(bpy.types.PropertyGroup):
@@ -72,8 +87,8 @@ class AnimationListPropertyGroup(bpy.types.PropertyGroup):
                                                    description="Go through animation cycle X times (useful for slow parent)", options={'SKIP_SAVE'})
     repeat_first_frame = bpy.props.IntProperty(name="Repeat first frame X times", description="Repeat first frame X times (useful for slow parent)",
                                                min = 0, default = 0, options={'SKIP_SAVE'})
-    actionProp = bpy.props.StringProperty(name="Action", description="Specify action where animation is stored (it only stores name of action, it won't update when name of that action changes)", options={'SKIP_SAVE'})
-
+    actionProp = bpy.props.StringProperty(name="Action", description="Specify action where animation is stored", options={'SKIP_SAVE'}, update=ANIMAUTORENDER_change_action)
+    actionPropPrevVal = bpy.props.StringProperty(name="Action prev value", default="")
 
 class AnimAutoRenderPropertyGroup(bpy.types.PropertyGroup):
     animation_collection = bpy.props.CollectionProperty(type = AnimationListPropertyGroup)
@@ -121,7 +136,10 @@ class AnimAutoRenderPropertyGroup(bpy.types.PropertyGroup):
     specifyMainObject = bpy.props.BoolProperty(name="Specify main object", default = False,
                                                description="Specify main object which will be selected and rotated by Z axis by angles from direction list, else current object will be rotated")
     mainObject = bpy.props.StringProperty(name="Main object",
-                                          description="Main object will be selected and rotated by Z axis by angles from direction list (it only stores name of object, it won't update when name of that object changes)")
+                                          description="Main object will be selected and rotated by Z axis by angles from direction list",
+                                          update=ANIMAUTORENDER_change_mainObject)
+    
+    mainObjectPrevValue = bpy.props.StringProperty(name="Main object prev value", default="")
     
     save_path = bpy.props.StringProperty(name = "Save path", default = "//", description = "Define the path where animation will be saved", subtype = 'DIR_PATH')  
     

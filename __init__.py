@@ -27,7 +27,7 @@ bl_info = {
     "description": "Addon for rendering sprite animation",
     "author": "Maciej Paluszek (My-Key)",
     "location": "Render",
-    "version": (1, 1, 2)
+    "version": (1, 2, 0)
 }
 
 
@@ -38,13 +38,15 @@ if "bpy" in locals():
     imp.reload(AAR_ui)
     imp.reload(AAR_render)
     imp.reload(AAR_preview)
+    imp.reload(AAR_watchers)
 else:
     import bpy
     from . import (AAR_operators,
                    AAR_properties,
                    AAR_ui,
                    AAR_render,
-                   AAR_preview)
+                   AAR_preview,
+                   AAR_watchers)
 
 import bpy.utils
 import bpy.props
@@ -55,12 +57,23 @@ def register():
     
     bpy.types.Scene.AnimAutoRender_properties = bpy.props.PointerProperty(type = AAR_properties.AnimAutoRenderPropertyGroup)
 
+    if AAR_watchers.InitWatchers not in bpy.app.handlers.load_post:
+        bpy.app.handlers.load_post.append(AAR_watchers.InitWatchers)
+    
+    AAR_watchers.InitWatchers(None)
 
 def unregister():
     bpy.utils.unregister_module(__name__)
     
+    if AAR_watchers.InitWatchers in bpy.app.handlers.load_post:
+        bpy.app.handlers.load_post.remove(AAR_watchers.InitWatchers)
+        
+    AAR_watchers.RemoveWatchers()
+        
     del bpy.types.Scene.AnimAutoRender_properties
 
+if AAR_watchers.InitWatchers not in bpy.app.handlers.load_post:
+    bpy.app.handlers.load_post.append(AAR_watchers.InitWatchers)
 
 if __name__ == "__main__" :
     register()
