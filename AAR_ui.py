@@ -23,6 +23,7 @@ Created by Maciej Paluszek
 
 import bpy, bl_operators
 import math
+import AnimationAutomatonRenderer
 
 # 
 #    List elements
@@ -88,12 +89,22 @@ class PreviewLoopMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
+        
+        props = layout.operator("wm.context_set_value", text="Once", icon="FORWARD")
+        props.data_path = "scene.AnimAutoRender_properties.loopType"
+        props.value = "2"
 
         props = layout.operator("wm.context_set_value", text="Repeat", icon="FILE_REFRESH")
         props.data_path = "scene.AnimAutoRender_properties.loopType"
         props.value = "0"
         
-        props = layout.operator("wm.context_set_value", text="Ping pong", icon="ARROW_LEFTRIGHT")
+        if "main" in AnimationAutomatonRenderer.preview_collections:
+            pcoll = AnimationAutomatonRenderer.preview_collections["main"]
+            my_icon = pcoll["ping_pong"].icon_id
+            props = layout.operator("wm.context_set_value", text="Ping pong", icon_value=my_icon)
+        else:
+            props = layout.operator("wm.context_set_value", text="Ping pong", icon="ARROW_LEFTRIGHT")
+        
         props.data_path = "scene.AnimAutoRender_properties.loopType"
         props.value = "1"
             
@@ -298,16 +309,19 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
             col.operator("view3d.aar_preview", icon="PLAY", text="Preview - " + (animation.name if animation else ""))
         else:
             col.operator("view3d.aar_preview", icon="PAUSE", text="Preview - " + (animation.name if animation else ""))
-    
+        
         col.enabled = framesEnabledCount > 1
-    
+        
+        if "main" in AnimationAutomatonRenderer.preview_collections:
+            pcoll = AnimationAutomatonRenderer.preview_collections["main"]
+            my_icon = pcoll["ping_pong"].icon_id
+        
         row = col.row()
         col.prop(AAR_props, "preview_skip_disabled_frames")
         col = row.column()
         col.prop(AAR_props, 'previewFPS')
         col.enabled = not AAR_props.previewIsOn
-        row.menu('VIEW3D_MT_preview_loop_menu', text="Repeat" if AAR_props.loopType == 0 else "Ping pong",
-                 icon="FILE_REFRESH" if AAR_props.loopType == 0 else "ARROW_LEFTRIGHT")
+        row.menu('VIEW3D_MT_preview_loop_menu', text="Repeat" if AAR_props.loopType == 0 else ("Ping pong" if AAR_props.loopType == 1 else "Once"))
         
         layout.separator()
         

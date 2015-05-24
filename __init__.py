@@ -27,7 +27,7 @@ bl_info = {
     "description": "Addon for rendering sprite animation",
     "author": "Maciej Paluszek (My-Key)",
     "location": "Render",
-    "version": (1, 2, 0)
+    "version": (1, 2, 1)
 }
 
 
@@ -51,13 +51,22 @@ else:
 import bpy.utils
 import bpy.props
 import math
+import os
 from bpy.app.handlers import persistent
 
+preview_collections = {}
+
 def register():
+    import bpy.utils.previews
+    my_icons_dir = os.path.join(os.path.dirname(__file__), "icons")
+    pcoll = bpy.utils.previews.new()
+    pcoll.load("ping_pong", os.path.join(my_icons_dir, "ping_pong.png"), 'IMAGE')
+    preview_collections["main"] = pcoll
+    
     bpy.utils.register_module(__name__)
     
     bpy.types.Scene.AnimAutoRender_properties = bpy.props.PointerProperty(type = AAR_properties.AnimAutoRenderPropertyGroup)
-
+    
     if AAR_watchers.InitWatchers not in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.append(AAR_watchers.InitWatchers)
     
@@ -65,6 +74,10 @@ def register():
     
 
 def unregister():
+    for pcoll in preview_collections.values():
+        bpy.utils.previews.remove(pcoll)
+    preview_collections.clear()
+    
     bpy.utils.unregister_module(__name__)
     
     if AAR_watchers.InitWatchers in bpy.app.handlers.load_post:

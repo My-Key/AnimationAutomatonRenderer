@@ -57,6 +57,8 @@ class VIEW3D_OT_aar_preview(bpy.types.Operator):
                     elif AAR_props.loopType == 1:
                         self._direction = -1
                         self._index = len(animation.frames) - 2
+                    elif AAR_props.loopType == 2:
+                        return self.cancel(context)
                 
                 frame = animation.frames[self._index]
                 if frame.enabled or not AAR_props.preview_skip_disabled_frames:
