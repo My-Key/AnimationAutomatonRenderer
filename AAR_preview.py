@@ -69,6 +69,9 @@ class VIEW3D_OT_aar_preview(bpy.types.Operator):
                 return self.cancel(context)
             
             bpy.context.scene.frame_set(frameEnabled.frame)
+            
+            if AAR_props.repeat_go_to_frame:
+                bpy.context.scene.frame_set(frameEnabled.frame)
 
         return {'PASS_THROUGH'}
 
