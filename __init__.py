@@ -27,7 +27,7 @@ bl_info = {
     "description": "Addon for rendering sprite animation",
     "author": "Maciej Paluszek (My-Key)",
     "location": "Render",
-    "version": (1, 2, 1)
+    "version": (1, 2, 2)
 }
 
 

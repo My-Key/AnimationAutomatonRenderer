@@ -54,6 +54,7 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
     _frameDone = False
     _nextFrameDelay = 0.0
     _framesList = []
+    _prevLayers = tuple(False for i in range(0, 20)) 
 
     def modal(self, context, event):
         if event.type in {'ESC'} or self._calcs_done:
@@ -68,6 +69,7 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
             self._nextFrameDelay += 0.1
             
             if self._nextFrameDelay >= 0.2:
+                bpy.context.scene.layers = self._prevLayers
                 self._frameDone = False
                 self._updating = False
                 self._nextFrameDelay = 0.0
@@ -110,6 +112,8 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
         self._updating = False
         self._frameDone = False
         
+        self._prevLayers = tuple(bpy.context.scene.layers[i] for i in range(0, 20))
+        
         wm = context.window_manager
         self._timer = wm.event_timer_add(0.1, context.window)
         wm.modal_handler_add(self)
@@ -136,6 +140,8 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
         
         wm = context.window_manager
         wm.event_timer_remove(self._timer)
+        
+        bpy.context.scene.layers = self._prevLayers
         
         return {'CANCELLED'}
     
@@ -234,6 +240,9 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
                          ((dirFolder + separator) if AAR_props.use_dir_folder_name else "") +
                          ("%0" + str(AAR_props.frame_number_digits) + "d") % self._index)
         
+        
+        if animation.use_layers:
+            bpy.context.scene.layers = animation.layers
         
         bpy.context.scene.render.filepath = (path + dirFolder + "\\" + frameName) if ftr.dirsCount > 1 else (path + frameName)
 

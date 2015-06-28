@@ -478,6 +478,11 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
                 
                 if AAR_props.mainObject and len(bpy.data.actions) > 1:
                     layout.prop_search(entry, "actionProp", bpy.data, "actions")
+                
+                
+                layout.prop(entry, "use_layers")
+                if entry.use_layers:
+                    layout.prop(entry, "layers")
                     
             else:
                 row.prop(AAR_props, "animations_expand", icon="RIGHTARROW", text="", icon_only=True, emboss=False)

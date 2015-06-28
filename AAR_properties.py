@@ -89,6 +89,9 @@ class AnimationListPropertyGroup(bpy.types.PropertyGroup):
                                                min = 0, default = 0, options={'SKIP_SAVE'})
     actionProp = bpy.props.StringProperty(name="Action", description="Specify action where animation is stored", options={'SKIP_SAVE'}, update=ANIMAUTORENDER_change_action)
     actionPropPrevVal = bpy.props.StringProperty(name="Action prev value", default="")
+    
+    use_layers = bpy.props.BoolProperty(name="Set visible layers", default = False, options={'SKIP_SAVE'})
+    layers = bpy.props.BoolVectorProperty(name="", size = 20, default=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False), subtype = 'LAYER')
 
 class AnimAutoRenderPropertyGroup(bpy.types.PropertyGroup):
     animation_collection = bpy.props.CollectionProperty(type = AnimationListPropertyGroup)
