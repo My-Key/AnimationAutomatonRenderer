@@ -305,6 +305,72 @@ class ANIMAUTORENDER_OT_keep_active_unique_frames(bpy.types.Operator):
                     item.enabled = False
        
         return {'FINISHED'}
+    
+    
+    
+class ANIMAUTORENDER_OT_play_rendered_preview(bpy.types.Operator):
+    bl_label = "Preview rendered animation"
+    bl_idname = "animautorender.play_rendered_preview"  
+    bl_description = "Preview rendered animation"
+     
+    def invoke(self, context, event):
+        AAR_props = context.scene.AnimAutoRender_properties
+        index = AAR_props.animation_collection_index
+        if index >= 0 and AAR_props.directionList_index >= 0:
+            animation = AAR_props.animation_collection[AAR_props.animation_collection_index]
+            folderName = animation.folderName
+            
+            collection = animation.frames
+            
+            direction = AAR_props.directionList[AAR_props.directionList_index]
+                
+            animFolder = animation.folderName
+            separator = AAR_props.file_name_separator
+            dirFolder = direction.folderName
+            
+            scene = bpy.context.scene
+            
+            path = AAR_props.save_path + animFolder + "\\" + dirFolder + "\\"
+            prevPath = scene.render.filepath
+            
+            scene.render.filepath = path
+            
+            frame_start = scene.frame_start
+            frame_end = scene.frame_end
+            
+            scene.frame_start = 0
+            
+            first_frame_found = False
+                        
+            list_of_used_frames = []
+            
+            for item in collection:
+                if item.frame not in list_of_used_frames:
+                    list_of_used_frames.append(item.frame)
+                if item.enabled and not first_frame_found:
+                    if animation.override_first_frame_index:
+                        scene.frame_start = item.frame
+                        first_frame_found = True
+                    
+                    
+            scene.frame_end = scene.frame_start + len(list_of_used_frames) - 1
+            
+            fps = scene.render.fps
+            scene.render.fps = AAR_props.previewFPS
+            
+            frame_step = scene.frame_step
+            scene.frame_step = 1
+            
+            
+            bpy.ops.render.play_rendered_anim()
+            
+            scene.render.filepath = prevPath
+            scene.frame_start = frame_start
+            scene.frame_end = frame_end
+            scene.render.fps = fps
+            scene.frame_step = frame_step
+       
+        return {'FINISHED'}
    
 #
 #    Object

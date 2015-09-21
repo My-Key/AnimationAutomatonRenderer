@@ -324,7 +324,11 @@ class RENDER_PT_Animation_Automaton_Renderer(bpy.types.Panel):
         row.menu('VIEW3D_MT_preview_loop_menu', text="Repeat" if AAR_props.loopType == 0 else ("Ping pong" if AAR_props.loopType == 1 else "Once"))
         
         layout.separator()
+        layout = layout.column()
         
+        layout.operator("animautorender.play_rendered_preview", icon="PLAY", text="Preview - " + (animation.name if animation else ""))
+        
+        layout.separator()
         layout = layout.column()
         layout.enabled = not AAR_props.rendering and not AAR_props.previewIsOn
         

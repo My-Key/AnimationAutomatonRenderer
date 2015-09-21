@@ -220,7 +220,7 @@ class RENDER_OT_animation_automaton_render(bpy.types.Operator):
             
             if animation.override_first_frame_index:
                 if animation.use_index_of_first_frame:
-                    self._index = firstActiveFrame
+                    self._index = frame.frame
                 else:
                     self._index = animation.first_frame_index
             else:
